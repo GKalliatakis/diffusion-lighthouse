@@ -1,0 +1,142 @@
+# data/papers.yaml
+# Source of truth for Diffusion Lighthouse.
+# This list is human-curated. Citation counts are added separately.
+
+papers:
+  # ===== Foundations =====
+  - id: ddpm_2020
+    title: "Denoising Diffusion Probabilistic Models"
+    year: 2020
+    authors: ["Ho", "Jain", "Abbeel"]
+    venue: "NeurIPS"
+    links:
+      arxiv: "https://arxiv.org/abs/2006.11239"
+      pdf: "https://arxiv.org/pdf/2006.11239.pdf"
+    scholar:
+      scholar_query: "\"Denoising Diffusion Probabilistic Models\" Ho Jain Abbeel"
+    tags: ["foundations", "image"]
+
+  - id: ddim_2020
+    title: "Denoising Diffusion Implicit Models"
+    year: 2020
+    authors: ["Song", "Meng", "Ermon"]
+    venue: "ICLR"
+    links:
+      arxiv: "https://arxiv.org/abs/2010.02502"
+      pdf: "https://arxiv.org/pdf/2010.02502.pdf"
+    scholar:
+      scholar_query: "\"Denoising Diffusion Implicit Models\""
+    tags: ["foundations", "sampling"]
+
+  - id: score_sde_2021
+    title: "Score-Based Generative Modeling through Stochastic Differential Equations"
+    year: 2021
+    authors: ["Song", "Sohl-Dickstein", "Kingma", "Kumar", "Ermon", "Poole"]
+    venue: "ICLR"
+    links:
+      arxiv: "https://arxiv.org/abs/2011.13456"
+      pdf: "https://arxiv.org/pdf/2011.13456.pdf"
+    scholar:
+      scholar_query: "\"Score-Based Generative Modeling through Stochastic Differential Equations\""
+    tags: ["foundations", "theory"]
+
+  - id: score_matching_2019
+    title: "Generative Modeling by Estimating Gradients of the Data Distribution"
+    year: 2019
+    authors: ["Song", "Ermon"]
+    venue: "NeurIPS"
+    links:
+      arxiv: "https://arxiv.org/abs/1907.05600"
+      pdf: "https://arxiv.org/pdf/1907.05600.pdf"
+    scholar:
+      scholar_query: "\"Generative Modeling by Estimating Gradients of the Data Distribution\""
+    tags: ["foundations", "score"]
+
+  # ===== Training & Objectives =====
+  - id: improved_ddpm_2021
+    title: "Improved Denoising Diffusion Probabilistic Models"
+    year: 2021
+    authors: ["Nichol", "Dhariwal"]
+    venue: "ICML"
+    links:
+      arxiv: "https://arxiv.org/abs/2102.09672"
+      pdf: "https://arxiv.org/pdf/2102.09672.pdf"
+    scholar:
+      scholar_query: "\"Improved Denoising Diffusion Probabilistic Models\""
+    tags: ["training", "image"]
+
+  # ===== Guidance & Conditioning =====
+  - id: classifier_guidance_2021
+    title: "Diffusion Models Beat GANs on Image Synthesis"
+    year: 2021
+    authors: ["Dhariwal", "Nichol"]
+    venue: "NeurIPS"
+    links:
+      arxiv: "https://arxiv.org/abs/2105.05233"
+      pdf: "https://arxiv.org/pdf/2105.05233.pdf"
+    scholar:
+      scholar_query: "\"Diffusion Models Beat GANs on Image Synthesis\""
+    tags: ["guidance", "image"]
+
+  - id: classifier_free_guidance_2022
+    title: "Classifier-Free Diffusion Guidance"
+    year: 2022
+    authors: ["Ho", "Salimans"]
+    venue: "arXiv"
+    links:
+      arxiv: "https://arxiv.org/abs/2207.12598"
+      pdf: "https://arxiv.org/pdf/2207.12598.pdf"
+    scholar:
+      scholar_query: "\"Classifier-Free Diffusion Guidance\""
+    tags: ["guidance", "conditioning"]
+
+  # ===== Latent & Scaling =====
+  - id: latent_diffusion_2022
+    title: "High-Resolution Image Synthesis with Latent Diffusion Models"
+    year: 2022
+    authors: ["Rombach", "Blattmann", "Lorenz", "Esser", "Ommer"]
+    venue: "CVPR"
+    links:
+      arxiv: "https://arxiv.org/abs/2112.10752"
+      pdf: "https://arxiv.org/pdf/2112.10752.pdf"
+    scholar:
+      scholar_query: "\"High-Resolution Image Synthesis with Latent Diffusion Models\""
+    tags: ["latent", "image", "systems"]
+
+  # ===== Text-to-Image =====
+  - id: glide_2021
+    title: "GLIDE: Towards Photorealistic Image Generation and Editing with Text-Guided Diffusion Models"
+    year: 2021
+    authors: ["Nichol", "Dhariwal", "Ramesh", "et al."]
+    venue: "arXiv"
+    links:
+      arxiv: "https://arxiv.org/abs/2112.10741"
+      pdf: "https://arxiv.org/pdf/2112.10741.pdf"
+    scholar:
+      scholar_query: "\"GLIDE\" text-guided diffusion models"
+    tags: ["text-to-image", "editing"]
+
+  - id: imagen_2022
+    title: "Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding"
+    year: 2022
+    authors: ["Saharia", "Chan", "Saxena", "et al."]
+    venue: "arXiv"
+    links:
+      arxiv: "https://arxiv.org/abs/2205.11487"
+      pdf: "https://arxiv.org/pdf/2205.11487.pdf"
+    scholar:
+      scholar_query: "\"Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding\""
+    tags: ["text-to-image", "scaling"]
+
+  # ===== Acceleration =====
+  - id: progressive_distillation_2022
+    title: "Progressive Distillation for Fast Sampling of Diffusion Models"
+    year: 2022
+    authors: ["Salimans", "Ho"]
+    venue: "ICLR"
+    links:
+      arxiv: "https://arxiv.org/abs/2202.00512"
+      pdf: "https://arxiv.org/pdf/2202.00512.pdf"
+    scholar:
+      scholar_query: "\"Progressive Distillation for Fast Sampling of Diffusion Models\""
+    tags: ["acceleration", "distillation"]
