@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Diffusion Lighthouse</title>
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <meta name="theme-color" content="#0b0d10">
+  <meta property="og:title" content="Diffusion Lighthouse">
+  <meta property="og:description" content="A citation-guided index of influential diffusion-model research.">
+  <meta property="og:image" content="https://GKalliatakis.github.io/diffusion-lighthouse/assets/logo.png">
+  <meta property="og:type" content="website">
+
+
+</head>
+<body>
+  <header class="wrap">
+    <div class="top">
+      <div>
+        <div class="brand">
+          <img src="assets/logo.png" alt="Diffusion Lighthouse logo"/>
+          <h1>Diffusion Lighthouse</h1>
+        </div>
+        <p class="sub">
+          A citation-guided index of influential diffusion-model papers.
+          <span id="lastUpdated"></span>
+        </p>
+      </div>
+
+      <div class="links">
+        <a id="repoLink" href="#" target="_blank" rel="noopener">GitHub</a>
+      </div>
+    </div>
+
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search title/authors/tags/venue..." autocomplete="off" />
+      <select id="tag"></select>
+      <select id="sort">
+        <option value="cit_desc">Citations ↓</option>
+        <option value="cit_asc">Citations ↑</option>
+        <option value="year_desc">Year ↓</option>
+        <option value="year_asc">Year ↑</option>
+        <option value="title_asc">Title A→Z</option>
+      </select>
+      <button id="reset">Reset</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <div id="status" class="status"></div>
+
+    <div class="tableWrap">
+      <table id="tbl">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Title</th>
+            <th>Year</th>
+            <th>Venue</th>
+            <th class="num">Citations</th>
+            <th>Tags</th>
+            <th>Links</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </main>
+
+  <footer class="wrap foot">
+    <p>
+      Citation counts are best-effort snapshots (Google Scholar when available, Semantic Scholar fallback).
+      Counts may differ by source and time.
+    </p>
+  </footer>
+
+  <!-- YAML parser -->
+  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

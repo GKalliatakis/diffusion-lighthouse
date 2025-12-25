@@ -1,0 +1,42 @@
+name: Deploy site to GitHub Pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - "site/**"
+      - "data/papers.yaml"
+      - "data/citations.json"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Prepare site artifact
+        run: |
+          mkdir -p _site/data
+          cp -r site/* _site/
+          cp data/citations.json _site/data/citations.json
+          cp data/papers.yaml _site/data/papers.yaml
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: "_site"
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
