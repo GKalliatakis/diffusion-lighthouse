@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use Diffusion Lighthouse in your work, please cite it as below."
+title: "Diffusion Lighthouse"
+type: software
+license: MIT
+repository-code: "https://github.com/GKalliatakis/diffusion-lighthouse"
+abstract: >
+  Diffusion Lighthouse is a living, citation-guided index of influential diffusion-model
+  research papers. It combines careful human curation with best-effort citation snapshots
+  to help researchers navigate foundational work, major methods, scaling trends, and applications.
+keywords:
+  - diffusion models
+  - generative modeling
+  - score-based models
+  - denoising diffusion
+  - bibliography
+  - research index
+  - citations
+authors:
+  - family-names: Kalliatakis
+    given-names: Grigorios
+preferred-citation:
+  type: software
+  title: "Diffusion Lighthouse"
+  authors:
+    - family-names: Kalliatakis
+      given-names: Grigorios
+  year: 2025
+  version: "0.1.0"
+  url: "https://github.com/GKalliatakis/diffusion-lighthouse"

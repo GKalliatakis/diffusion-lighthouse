@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://diffusion-lighthouse.org/schema/papers.schema.json",
+  "title": "Diffusion Lighthouse Papers Dataset",
+  "type": "object",
+  "required": ["papers"],
+  "additionalProperties": false,
+  "properties": {
+    "papers": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/paper" }
+    }
+  },
+  "$defs": {
+    "paper": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "year",
+        "authors",
+        "venue",
+        "links",
+        "tags",
+        "impact_type",
+        "why_it_matters"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$",
+          "description": "Stable snake_case identifier (e.g., ddpm_2020)."
+        },
+        "title": { "type": "string", "minLength": 3 },
+        "year": { "type": "integer", "minimum": 2010, "maximum": 2035 },
+        "authors": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "venue": { "type": "string", "minLength": 2 },
+        "links": {
+          "type": "object",
+          "required": ["arxiv", "pdf"],
+          "additionalProperties": true,
+          "properties": {
+            "arxiv": { "type": "string", "format": "uri" },
+            "pdf": { "type": "string", "format": "uri" },
+            "code": { "type": "string", "format": "uri" },
+            "project": { "type": "string", "format": "uri" }
+          }
+        },
+        "scholar": {
+          "type": "object",
+          "required": ["scholar_url", "scholar_query"],
+          "additionalProperties": false,
+          "properties": {
+            "scholar_url": { "type": "string", "format": "uri" },
+            "scholar_query": { "type": "string", "minLength": 1 }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
+        },
+        "impact_type": {
+          "type": "string",
+          "enum": [
+            "foundational",
+            "enabling",
+            "refinement",
+            "survey",
+            "application",
+            "benchmark",
+            "system"
+          ]
+        },
+        "relations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/relation" }
+        },
+        "why_it_matters": { "type": "string", "minLength": 20 }
+      }
+    },
+    "relation": {
+      "type": "object",
+      "required": ["type", "target"],
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["precedes", "extends", "improves", "unifies", "uses", "inspired_by"]
+        },
+        "target": { "type": "string", "pattern": "^[a-z0-9]+(?:_[a-z0-9]+)*$" }
+      }
+    }
+  }
+}

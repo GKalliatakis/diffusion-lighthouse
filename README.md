@@ -24,12 +24,9 @@
 </p>
 
 
-**Diffusion Lighthouse** is a living, citation-guided index of the most influential research papers on **Diffusion Models**.
+**Diffusion Lighthouse** helps researchers, students, and practitioners navigate a fast-growing literature by highlighting **impactful work**, using **Google Scholar citation counts** combined with careful human curation.
 
-It helps researchers, students, and practitioners navigate a fast-growing literature by highlighting **impactful work**, using **Google Scholar citation counts** combined with careful human curation.
-
-> Like a lighthouse, this project does not chart every wave —  
-> it helps you orient toward the most important signals.
+> Like a lighthouse, this project does not chart every wave — it helps you orient toward the most important signals.
 
 ---
 

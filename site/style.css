@@ -1,0 +1,477 @@
+/* =========================
+   Diffusion Lighthouse — UI
+   ========================= */
+
+:root{
+  --bg:#0b0f14;
+  --panel:#0f1623;
+  --panel-soft:#0b1220;
+  --text:#e6eaf2;
+  --muted:#9aa7bd;
+  --border:#223049;
+  --chip:#111b2f;
+  --link:#9bd2ff;
+
+  --shadow-lg: 0 10px 30px rgba(0,0,0,.25);
+  --shadow-sm: 0 4px 12px rgba(0,0,0,.2);
+
+  --radius-lg:16px;
+  --radius-md:12px;
+}
+
+/* Reset */
+*{ box-sizing:border-box }
+html,body{ height:100% }
+
+body{
+  margin:0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background:
+    radial-gradient(1000px 600px at 15% -10%, rgba(80,120,255,.18), transparent 55%),
+    radial-gradient(900px 500px at 85% -15%, rgba(0,255,210,.10), transparent 50%),
+    var(--bg);
+  color:var(--text);
+  line-height:1.45;
+}
+
+/* =========================
+   Layout
+   ========================= */
+
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  padding:20px;
+}
+
+header{
+  position:sticky;
+  top:0;
+  z-index:10;
+  background: linear-gradient(
+    rgba(11,15,20,.98),
+    rgba(11,15,20,.82)
+  );
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid var(--border);
+}
+
+.hero{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  padding:10px 0 6px;
+}
+
+/* =========================
+   Branding
+   ========================= */
+
+.brandRow{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.logo{
+  width:36px;
+  height:36px;
+  flex-shrink:0;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background: rgba(15,22,35,.65);
+  box-shadow: var(--shadow-sm);
+  object-fit:contain;
+}
+
+.brand h1{
+  margin:0;
+  font-size:22px;
+  line-height:1.1;
+  letter-spacing:.2px;
+}
+
+.brandRow p{
+  margin:4px 0 0;
+  color:var(--muted);
+  font-size:13px;
+}
+
+/* =========================
+   KPIs / Pills
+   ========================= */
+
+.kpis{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+
+.kpi{
+  border:1px solid var(--border);
+  background: rgba(15,22,35,.7);
+  border-radius:999px;
+  padding:6px 10px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+/* =========================
+   Controls
+   ========================= */
+
+.controls{
+  margin:14px 0 12px;
+  display:grid;
+  grid-template-columns: 1fr 220px 220px 180px auto;
+  gap:10px;
+}
+
+@media (max-width: 900px){
+  .controls{
+    grid-template-columns:1fr 1fr;
+  }
+}
+
+input,
+select,
+button{
+  padding:10px 12px;
+  border-radius:var(--radius-md);
+  border:1px solid var(--border);
+  background: rgba(15,22,35,.75);
+  color:var(--text);
+  outline:none;
+}
+
+input::placeholder{
+  color:rgba(154,167,189,.75);
+}
+
+input:focus,
+select:focus{
+  border-color: rgba(155,210,255,.55);
+  box-shadow: 0 0 0 4px rgba(155,210,255,.10);
+}
+
+button{
+  cursor:pointer;
+  background: linear-gradient(
+    180deg,
+    rgba(155,210,255,.18),
+    rgba(15,22,35,.75)
+  );
+}
+
+button:hover{
+  border-color: rgba(155,210,255,.55);
+}
+
+/* =========================
+   Main list
+   ========================= */
+
+main{
+  padding-top:14px;
+}
+
+.list{
+  display:grid;
+  gap:14px;
+  margin-top:16px;
+}
+
+/* =========================
+   Paper cards
+   ========================= */
+
+.card{
+  border:1px solid var(--border);
+  background: linear-gradient(
+    180deg,
+    rgba(15,22,35,.82),
+    rgba(11,18,32,.72)
+  );
+  border-radius:var(--radius-lg);
+  padding:14px;
+  box-shadow: var(--shadow-lg);
+  transition:
+    transform .12s ease,
+    border-color .12s ease;
+}
+
+.card:hover{
+  transform: translateY(-1px);
+  border-color: rgba(155,210,255,.40);
+}
+
+.cardTop{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.card h2{
+  margin:0;
+  font-size:16px;
+  line-height:1.25;
+}
+
+/* =========================
+   Metadata & chips
+   ========================= */
+
+.smallMeta{
+  margin-top:6px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+.badgeRow{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  margin-top:10px;
+}
+
+.chip{
+  display:inline-flex;
+  align-items:center;
+  padding:4px 10px;
+  border:1px solid var(--border);
+  background: rgba(17,27,47,.85);
+  border-radius:999px;
+  font-size:12px;
+  color:var(--muted);
+  white-space:nowrap;
+}
+
+/* =========================
+   Links & description
+   ========================= */
+
+.links{
+  margin-top:10px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+}
+
+a{
+  color:var(--link);
+  text-decoration:none;
+}
+
+a:hover{
+  text-decoration:underline;
+}
+
+.why{
+  margin-top:10px;
+  font-size:13px;
+  line-height:1.5;
+  color: rgba(230,234,242,.92);
+}
+
+/* =========================
+   Footer
+   ========================= */
+
+.footer{
+  border-top:1px solid var(--border);
+  margin-top:22px;
+  padding-top:14px;
+  font-size:12px;
+  color:var(--muted);
+}
+
+code{
+  color:#c7d2fe;
+}
+
+
+/* =========================
+   Cite button + modal
+   ========================= */
+
+.cardActions{
+  margin-top: 10px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.citeBtn{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  padding:8px 10px;
+  border-radius:12px;
+  border:1px solid var(--border);
+  background: rgba(15,22,35,.2);
+  color:var(--text); /* IMPORTANT: fixes invisible icon */
+  cursor:pointer;
+}
+
+.citeBtn:hover{
+  border-color: rgba(155,210,255,.55);
+}
+
+.citeIcon{
+  width:16px;
+  height:16px;
+}
+
+/* Modal */
+.modal{
+  position: fixed;
+  inset: 0;
+  display: none;
+  z-index: 50;
+}
+
+.modal[aria-hidden="false"]{
+  display: block;
+}
+
+.modalOverlay{
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  backdrop-filter: blur(6px);
+}
+
+.modalPanel{
+  position: relative;
+  max-width: 820px;
+  margin: 8vh auto;
+  background: linear-gradient(180deg, rgba(15,22,35,.95), rgba(11,18,32,.92));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  padding: 14px;
+}
+
+.modalHeader{
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  margin-bottom: 10px;
+}
+
+.modalTitle{
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.modalSubtitle{
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+
+.iconBtn{
+  border: 1px solid var(--border);
+  background: rgba(15,22,35,.75);
+  color: var(--text);
+  border-radius: 10px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.iconBtn:hover{
+  border-color: rgba(155,210,255,.55);
+}
+
+.bibtexBox{
+  width: 100%;
+  min-height: 280px;
+  resize: vertical;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(10,16,28,.8);
+  color: var(--text);
+  padding: 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+.modalActions{
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-top: 10px;
+}
+
+.ghostBtn{
+  background: rgba(15,22,35,.2);
+}
+
+.linkBtn{
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border);
+  background: rgba(15,22,35,.2);
+  color: var(--text);
+  text-decoration: none;
+}
+
+.linkBtn:hover{
+  border-color: rgba(155,210,255,.55);
+}
+
+.modalFootnote{
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.citeBtn {
+  color: var(--text);
+}
+
+
+.links{
+  margin-top:10px;
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  align-items:center; /* keeps baseline aligned */
+}
+
+/* Make link-actions consistent (anchors + buttons) */
+.links a,
+.links button.linkAction{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+
+  padding:0;                 /* remove pill padding */
+  border:0;                  /* remove button border */
+  background:transparent;    /* remove button bg */
+  color:var(--link);
+  font: inherit;
+  cursor:pointer;
+}
+
+.links a:hover,
+.links button.linkAction:hover{
+  text-decoration:underline;
+}
+
+/* Icon should inherit link color */
+.links .citeIcon{
+  width:15px;
+  height:15px;
+  opacity: .95;
+  transform: translateY(1px); /* optical alignment */
+}
+

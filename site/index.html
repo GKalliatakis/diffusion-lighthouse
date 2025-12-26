@@ -1,84 +1,95 @@
 <!doctype html>
 <html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Diffusion Lighthouse</title>
-  <link rel="stylesheet" href="styles.css" />
-  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16.png">
-  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
-  <meta name="theme-color" content="#0b0d10">
-  <meta property="og:title" content="Diffusion Lighthouse">
-  <meta property="og:description" content="A citation-guided index of influential diffusion-model research.">
-  <meta property="og:image" content="https://GKalliatakis.github.io/diffusion-lighthouse/assets/logo.png">
-  <meta property="og:type" content="website">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Diffusion Lighthouse</title>
 
+    <link rel="stylesheet" href="style.css" />
 
-</head>
-<body>
-  <header class="wrap">
-    <div class="top">
-      <div>
+    <link rel="icon" type="image/png" sizes="32x32" href="public/assets/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="public/assets/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="public/assets/brand/apple-touch-icon.png" />
+    <meta name="theme-color" content="#0b0f14" />
+  </head>
+
+  <body>
+    <header class="container">
+      <div class="hero">
         <div class="brand">
-          <img src="assets/logo.png" alt="Diffusion Lighthouse logo"/>
-          <h1>Diffusion Lighthouse</h1>
+          <div class="brandRow">
+            <img class="logo" src="public/assets/brand/logo.png" alt="Diffusion Lighthouse logo" />
+            <div>
+              <h1>Diffusion Lighthouse</h1>
+              <p>Dataset-first index of diffusion papers.</p>
+            </div>
+          </div>
         </div>
-        <p class="sub">
-          A citation-guided index of influential diffusion-model papers.
-          <span id="lastUpdated"></span>
-        </p>
+
+        <div class="kpis">
+          <div class="kpi"><span id="total">0</span> papers</div>
+          <div class="kpi"><span id="count">0</span> results</div>
+        </div>
       </div>
 
-      <div class="links">
-        <a id="repoLink" href="#" target="_blank" rel="noopener">GitHub</a>
+      <div class="controls">
+        <input id="q" type="search" placeholder="Search title, authors, venue, tags..." autocomplete="off" />
+
+        <select id="impact">
+          <option value="">All impact types</option>
+        </select>
+
+        <select id="tag">
+          <option value="">All tags</option>
+        </select>
+
+        <select id="sort">
+          <option value="new">Sort: newest</option>
+          <option value="old">Sort: oldest</option>
+          <option value="title">Sort: title</option>
+          <option value="cites">Sort: citations</option>
+        </select>
+
+        <button id="clear" type="button">Clear</button>
+      </div>
+
+      <!-- JS will populate this from papers.json (citations_meta) -->
+      <div class="smallMeta" id="citeMeta" style="margin-top:6px;"></div>
+    </header>
+
+    <main class="container">
+      <div id="list" class="list"></div>
+    </main>
+
+    <footer class="container muted footer">
+      <span>Powered by <code>data/papers.yaml</code> → <code>papers.json</code></span>
+    </footer>
+
+    <!-- Cite modal -->
+    <div class="modal" id="citeModal" aria-hidden="true">
+      <div class="modalOverlay" id="citeOverlay"></div>
+      <div class="modalPanel" role="dialog" aria-modal="true" aria-labelledby="citeTitle">
+        <div class="modalHeader">
+          <div>
+            <div class="modalTitle" id="citeTitle">Cite</div>
+            <div class="modalSubtitle" id="citeSubtitle"></div>
+          </div>
+          <button class="iconBtn" id="citeClose" type="button" aria-label="Close">✕</button>
+        </div>
+
+        <textarea class="bibtexBox" id="bibtexBox" spellcheck="false"></textarea>
+
+        <div class="modalActions">
+          <button id="copyBibtex" type="button">Copy BibTeX</button>
+          <a id="openScholar" class="linkBtn" href="#" target="_blank" rel="noreferrer">Open Scholar</a>
+          <button id="closeBibtex" type="button" class="ghostBtn">Close</button>
+        </div>
+
+        <div class="modalFootnote" id="citeFootnote"></div>
       </div>
     </div>
 
-    <div class="controls">
-      <input id="q" type="search" placeholder="Search title/authors/tags/venue..." autocomplete="off" />
-      <select id="tag"></select>
-      <select id="sort">
-        <option value="cit_desc">Citations ↓</option>
-        <option value="cit_asc">Citations ↑</option>
-        <option value="year_desc">Year ↓</option>
-        <option value="year_asc">Year ↑</option>
-        <option value="title_asc">Title A→Z</option>
-      </select>
-      <button id="reset">Reset</button>
-    </div>
-  </header>
 
-  <main class="wrap">
-    <div id="status" class="status"></div>
-
-    <div class="tableWrap">
-      <table id="tbl">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Title</th>
-            <th>Year</th>
-            <th>Venue</th>
-            <th class="num">Citations</th>
-            <th>Tags</th>
-            <th>Links</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
-  </main>
-
-  <footer class="wrap foot">
-    <p>
-      Citation counts are best-effort snapshots (Google Scholar when available, Semantic Scholar fallback).
-      Counts may differ by source and time.
-    </p>
-  </footer>
-
-  <!-- YAML parser -->
-  <script src="https://cdn.jsdelivr.net/npm/js-yaml@4/dist/js-yaml.min.js"></script>
-  <script src="app.js"></script>
-</body>
+    <script src="app.js"></script>
+  </body>
 </html>
