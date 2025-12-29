@@ -1,426 +1,961 @@
 // =========================
-// Diffusion Lighthouse — app.js
-// Adds: citations chip (exact), sort by citations, Cite modal w/ BibTeX + copy
+// Diffusion Lighthouse — app.js (DOM-first; matches your index.html + style.css)
+// FIXES:
+// - Works on GitHub Pages subpaths (e.g. /diffusion-lighthouse/)
+// - Robust SPA routing between index/about/policy using base-prefix aware paths
+// - Rewrites nav hrefs to include base prefix automatically
+//
+// PHASE 2 ADDITIONS (site explains itself):
+// - Renders an Index explainer once into #indexIntro (preferred), or falls back to inserting above #list
+// - Makes About link base-aware in the explainer
+//
+// FEATURES (kept):
+// - Uses existing DOM: #list, #q/#impact/#tag/#sort/#clear, KPIs, #citeMeta
+// - Uses existing modals: #citeModal and #paperModal (aria-hidden toggling)
+// - Peer-reviewed-first canonical link preference
+// - Allows arXiv links ONLY when publication_status === "canonical_preprint"
+// - Publication badge: Peer-reviewed vs Canonical preprint
+// - Citations chip: "Cited by X" + tooltip
+// - "Paper" + "Venue" links via pickPdfLink + pickVenueLink
 // =========================
 
-async function loadPapersJson() {
-  // Robust URL resolution: works for /site/ and for serving from inside site/
-  const url = new URL("public/data/papers.json", window.location.href);
-
-  const res = await fetch(url.toString(), { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load papers.json (${res.status}) at ${url}`);
-
-  const data = await res.json();
-  if (!data || !Array.isArray(data.papers)) {
-    throw new Error("papers.json is missing a top-level 'papers' array");
-  }
-  return data; // { papers: [...], citations_meta?: ... }
-}
+/* -------------------------
+   Helpers
+------------------------- */
 
 function $(id) {
-  const el = document.getElementById(id);
-  if (!el) throw new Error(`Missing element with id="${id}" in index.html`);
-  return el;
+  return document.getElementById(id);
 }
 
-function uniqSorted(arr) {
-  return [...new Set(arr)].sort((a, b) => a.localeCompare(b));
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
-function paperText(p) {
-  const authors = (p.authors || []).join(" ");
-  const tags = (p.tags || []).join(" ");
-  const why = (p.why_it_matters || "");
-  return `${p.title || ""} ${authors} ${p.venue || ""} ${p.year || ""} ${p.impact_type || ""} ${tags} ${why}`.toLowerCase();
+function normalizeArray(v) {
+  if (!v) return [];
+  return Array.isArray(v) ? v : [v];
 }
 
-function el(tag, attrs = {}, children = []) {
-  const SVG_TAGS = new Set([
-    "svg", "path", "g", "circle", "rect", "line", "polyline", "polygon", "ellipse"
-  ]);
+function formatAuthors(authors) {
+  const a = normalizeArray(authors).filter(Boolean);
+  if (a.length === 0) return "";
+  if (a.length <= 2) return a.join(", ");
+  if (a.length === 3) return `${a[0]}, ${a[1]}, ${a[2]}`;
+  return `${a[0]}, ${a[1]}, et al.`;
+}
 
-  const n = SVG_TAGS.has(tag)
-    ? document.createElementNS("http://www.w3.org/2000/svg", tag)
-    : document.createElement(tag);
-
-  for (const [k, v] of Object.entries(attrs)) {
-    if (k === "class") n.setAttribute("class", v);
-    else if (k.startsWith("on") && typeof v === "function") n.addEventListener(k.slice(2), v);
-    else n.setAttribute(k, v);
+function safeUrl(u) {
+  if (!u) return "";
+  try {
+    return new URL(u).toString();
+  } catch {
+    return "";
   }
+}
 
-  for (const c of children) {
-    if (typeof c === "string") n.appendChild(document.createTextNode(c));
-    else if (c) n.appendChild(c);
+function toTitleCase(s) {
+  return String(s || "")
+    .split(/[\s_-]+/)
+    .filter(Boolean)
+    .map((w) => w[0]?.toUpperCase() + w.slice(1))
+    .join(" ");
+}
+
+function isCanonicalPreprint(p) {
+  return String(p?.publication_status || "").toLowerCase() === "canonical_preprint";
+}
+
+function isPeerReviewed(p) {
+  const ps = String(p?.publication_status || "").toLowerCase();
+  return ps === "accepted" || ps === "published";
+}
+
+function publicationLabel(p) {
+  if (isCanonicalPreprint(p)) return "Canonical preprint";
+  if (isPeerReviewed(p)) return "Peer-reviewed";
+  return p?.publication_status ? toTitleCase(p.publication_status) : "";
+}
+
+function publicationTooltip(p) {
+  if (isCanonicalPreprint(p)) {
+    return "Included by exception: field-defining preprint with downstream lineage. Explicitly labeled.";
   }
-  return n;
-}
-
-
-function linkOrNull(href, text) {
-  if (!href) return null;
-  return el("a", { href, target: "_blank", rel: "noreferrer" }, [text]);
-}
-
-function fillSelect(selectId, values, placeholder) {
-  const sel = $(selectId);
-  sel.innerHTML = "";
-  sel.appendChild(el("option", { value: "" }, [placeholder]));
-  for (const v of values) sel.appendChild(el("option", { value: v }, [v]));
+  if (isPeerReviewed(p)) {
+    return "Peer-reviewed: canonical proceedings/journal links shown.";
+  }
+  return "";
 }
 
 /**
- * Exact always:
- * 25117 -> "25,117"
- * 9989  -> "9,989"
+ * Prefer peer-reviewed canonical links.
+ * For peer-reviewed papers: exclude arXiv links.
+ * For canonical_preprint: allow arXiv links.
  */
-function formatCitationsExact(n) {
-  const x = Number(n);
-  if (!Number.isFinite(x)) return "";
-  return x.toLocaleString("en-US");
-}
+function pickCanonicalLink(p) {
+  const links = p?.links || {};
+  const allowArxiv = isCanonicalPreprint(p);
 
-function citationCount(p) {
-  const c = Number(p?.citations?.count);
-  return Number.isFinite(c) ? c : null; // null means "missing"
-}
-
-// -------------------------
-// BibTeX helpers (Cite modal)
-// -------------------------
-
-function slugifyId(s) {
-  return String(s || "")
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-}
-
-function escapeBibtex(s) {
-  // Minimal escaping to avoid breaking braces/quotes
-  return String(s || "")
-    .replace(/\\/g, "\\\\")
-    .replace(/{/g, "\\{")
-    .replace(/}/g, "\\}")
-    .replace(/"/g, '\\"');
-}
-
-function authorsToBibtex(authors) {
-  const a = (authors || []).filter(Boolean).map(String).map(x => x.trim()).filter(x => x.length > 0);
-  return a.join(" and ");
-}
-
-function arxivIdFromUrl(url) {
-  const u = String(url || "");
-  const m = u.match(/arxiv\.org\/abs\/([^?#]+)/i);
-  return m ? m[1] : null;
-}
-
-function makeBibtex(p) {
-  // Prefer canonical BibTeX if you later add p.bibtex to your build output
-  if (p && p.bibtex && String(p.bibtex).trim()) return String(p.bibtex).trim();
-
-  const id = slugifyId(p.id || `${(p.authors?.[0] || "paper")}_${p.year || ""}`);
-  const title = escapeBibtex(p.title || "");
-  const author = escapeBibtex(authorsToBibtex(p.authors));
-  const year = p.year ? String(p.year) : "";
-  const venue = escapeBibtex(p.venue || "");
-  const arxivAbs = p.links?.arxiv || "";
-  const arxivId = arxivIdFromUrl(arxivAbs);
-
-  const v = (p.venue || "").toLowerCase();
-  const entryType = v.includes("arxiv") ? "article" : "inproceedings";
-
-  const lines = [];
-  lines.push(`@${entryType}{${id},`);
-  if (title) lines.push(`  title = {${title}},`);
-  if (author) lines.push(`  author = {${author}},`);
-  if (venue) {
-    if (entryType === "article") lines.push(`  journal = {${venue}},`);
-    else lines.push(`  booktitle = {${venue}},`);
-  }
-  if (year) lines.push(`  year = {${year}},`);
-  if (arxivId) {
-    lines.push(`  eprint = {${escapeBibtex(arxivId)}},`);
-    lines.push(`  archivePrefix = {arXiv},`);
-  }
-  if (arxivAbs) lines.push(`  url = {${escapeBibtex(arxivAbs)}},`);
-
-  // Remove trailing comma from the last field
-  if (lines.length > 1) {
-    lines[lines.length - 1] = lines[lines.length - 1].replace(/,\s*$/, "");
-  }
-  lines.push("}");
-
-  return lines.join("\n");
-}
-
-// -------------------------
-// Cite modal wiring
-// -------------------------
-
-let openCiteModal = null; // function(paper)
-
-function initCiteModal() {
-  const citeModal = document.getElementById("citeModal");
-  if (!citeModal) return; // modal not added to HTML yet
-
-  const citeOverlay = document.getElementById("citeOverlay");
-  const citeClose = document.getElementById("citeClose");
-  const closeBibtex = document.getElementById("closeBibtex");
-  const bibtexBox = document.getElementById("bibtexBox");
-  const copyBibtex = document.getElementById("copyBibtex");
-  const openScholar = document.getElementById("openScholar");
-  const citeSubtitle = document.getElementById("citeSubtitle");
-  const citeFootnote = document.getElementById("citeFootnote");
-
-  let currentBibtex = "";
-
-  function open(p) {
-    const bib = makeBibtex(p);
-    currentBibtex = bib;
-
-    citeModal.setAttribute("aria-hidden", "false");
-    bibtexBox.value = bib;
-
-    citeSubtitle.textContent = (p.title || "").slice(0, 160);
-
-    // Prefer scholar URL, then arXiv, then PDF
-    openScholar.href = p?.scholar?.scholar_url || p?.citations?.scholar_url || p?.links?.arxiv || p?.links?.pdf || "#";
-
-    const checked = p?.citations?.last_checked_utc ? ` • citations checked ${p.citations.last_checked_utc}` : "";
-    citeFootnote.textContent = `BibTeX is generated from dataset fields when a canonical BibTeX entry is not available${checked}.`;
-
-    bibtexBox.focus();
-    bibtexBox.select();
+  const order = ["doi", "journal", "pdf", "proceedings", "publisher", "official", "url"];
+  for (const k of order) {
+    const u = safeUrl(links?.[k]);
+    if (!u) continue;
+    if (!allowArxiv && u.includes("arxiv.org")) continue;
+    return { key: k, url: u };
   }
 
-  function close() {
-    citeModal.setAttribute("aria-hidden", "true");
-    currentBibtex = "";
+  // canonical_preprint fallback: use arxiv/pdf if present
+  if (allowArxiv) {
+    const pdf = safeUrl(links?.pdf);
+    if (pdf) return { key: "pdf", url: pdf };
+    const ax = safeUrl(links?.arxiv);
+    if (ax) return { key: "arxiv", url: ax };
   }
 
-  citeOverlay?.addEventListener("click", close);
-  citeClose?.addEventListener("click", close);
-  closeBibtex?.addEventListener("click", close);
+  return null;
+}
 
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape" && citeModal.getAttribute("aria-hidden") === "false") close();
-  });
+function pickPdfLink(p) {
+  const u = safeUrl(p?.links?.pdf);
+  if (!u) return null;
+  if (!isCanonicalPreprint(p) && u.includes("arxiv.org")) return null;
+  return u;
+}
 
-  copyBibtex?.addEventListener("click", async () => {
-    try {
-      await navigator.clipboard.writeText(currentBibtex || bibtexBox.value || "");
-      copyBibtex.textContent = "Copied!";
-      setTimeout(() => (copyBibtex.textContent = "Copy BibTeX"), 900);
-    } catch {
-      // Fallback: select text so user can Cmd/Ctrl+C
-      bibtexBox.focus();
-      bibtexBox.select();
-      copyBibtex.textContent = "Select & copy";
-      setTimeout(() => (copyBibtex.textContent = "Copy BibTeX"), 1200);
+function pickVenueLink(p) {
+  const links = p?.links || {};
+  const allowArxiv = isCanonicalPreprint(p);
+  const order = ["doi", "journal", "proceedings", "publisher", "official", "url"];
+  for (const k of order) {
+    const u = safeUrl(links[k]);
+    if (!u) continue;
+    if (!allowArxiv && u.includes("arxiv.org")) continue;
+    return { key: k, url: u };
+  }
+  return null;
+}
+
+function getCitationsCount(p) {
+  const raw = p?.citations?.count;
+
+  if (raw == null) return 0;
+  if (typeof raw === "number" && Number.isFinite(raw)) return raw;
+
+  const cleaned = String(raw).replace(/[^\d]/g, "");
+  if (!cleaned) return 0;
+
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function makeBibTeX(p) {
+  const id = (p.id || "paper").replace(/[^\w-]/g, "");
+  const year = p.year || "";
+  const title = p.title || "";
+  const authors = normalizeArray(p.authors).filter(Boolean).join(" and ");
+  const venue = p.venue || "";
+  const link = pickCanonicalLink(p)?.url || "";
+
+  const entryType = String(p.venue || "").toLowerCase().includes("journal") ? "article" : "inproceedings";
+
+  return `@${entryType}{${id},
+  title={${title}},
+  author={${authors}},
+  year={${year}}${venue ? `,
+  booktitle={${venue}}` : ""}${link ? `,
+  url={${link}}` : ""}
+}`;
+}
+
+/* -------------------------
+   Base-path aware routing
+------------------------- */
+
+// Compute base prefix (e.g. "/diffusion-lighthouse") so routes work on GitHub Pages subpaths.
+const ROUTES = ["/about", "/editorial-policy"];
+function computeBasePrefix() {
+  let p = window.location.pathname || "/";
+  p = p.replace(/\/index\.html$/, "");
+
+  for (const r of ROUTES) {
+    const idx = p.indexOf(r);
+    if (idx !== -1) {
+      const base = p.slice(0, idx);
+      return base.endsWith("/") ? base.slice(0, -1) : base;
     }
-  });
+  }
 
-  openCiteModal = open;
+  if (p !== "/" && p.endsWith("/")) p = p.slice(0, -1);
+  return p === "/" ? "" : p;
 }
 
-// -------------------------
-// Rendering
-// -------------------------
+const BASE = computeBasePrefix();
 
-function renderList(papers) {
+function joinBase(route) {
+  const r = route === "/" ? "" : route;
+  const b = BASE || "";
+  const out = `${b}${r}`;
+  return out || "/";
+}
+
+function routeFromPathname(pathname) {
+  let p = (pathname || "/").replace(/\/index\.html$/, "");
+  if (BASE && p.startsWith(BASE)) p = p.slice(BASE.length);
+  if (!p) p = "/";
+  if (!p.startsWith("/")) p = `/${p}`;
+
+  if (p === "/" || p === "") return "index";
+  if (p === "/about") return "about";
+  if (p === "/editorial-policy") return "policy";
+  return "index";
+}
+
+function rewriteNavHrefs() {
+  const map = {
+    index: joinBase("/"),
+    about: joinBase("/about"),
+    policy: joinBase("/editorial-policy"),
+  };
+
+  document.querySelectorAll("a[data-nav]").forEach((a) => {
+    const key = a.getAttribute("data-nav");
+    if (map[key]) a.setAttribute("href", map[key]);
+  });
+}
+
+/* -------------------------
+   Phase 2: “site explains itself”
+------------------------- */
+
+function renderIndexExplainerOnce() {
+  const host = $("indexIntro");
+  if (!host) return;
+  if (host.dataset.rendered === "1") return;
+  host.innerHTML = renderIndexExplainer();
+  host.dataset.rendered = "1";
+}
+
+
+function renderIndexExplainer() {
+  const aboutHref = joinBase("/about");
+  return `
+    <section class="policyCard" style="margin-top:14px;">
+      <p style="margin-top:0;">
+        <strong>Diffusion Lighthouse</strong> is a curated, dataset-first map of diffusion research.
+        It prioritizes <strong>ideas, provenance, and long-term relevance</strong> over benchmark tables.
+      </p>
+      <p class="muted" style="margin:10px 0 0 0;">
+        Tip: sort by <strong>citations</strong> for a “gravity well” view — then open a paper to see its
+        <strong>dataset focus</strong>, <strong>concept tags</strong>, and <strong>relations</strong>.
+        <a href="${escapeHtml(aboutHref)}" data-nav="about">How to read this →</a>
+      </p>
+    </section>
+  `;
+}
+
+function renderIndexIntroOnce() {
+  const host = $("indexIntro"); // ✅ must exist in index.html
+  if (!host) return;
+
+  // Only render once per page load
+  if (host.dataset.rendered === "1") return;
+
+  host.innerHTML = renderIndexExplainer();
+  host.dataset.rendered = "1";
+}
+
+
+/* -------------------------
+   Data loading
+------------------------- */
+
+async function loadPapersJson() {
+  // Always fetch from the site root (repo base), not from the current route.
+  const url = new URL(joinBase("/public/data/papers.json"), window.location.origin);
+
+  const res = await fetch(url.toString(), { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load papers.json (${res.status})`);
+
+  const data = await res.json();
+
+  const papers = Array.isArray(data) ? data : Array.isArray(data?.papers) ? data.papers : [];
+  const citationsMeta = Array.isArray(data) ? null : data?.citations_meta || null;
+
+  return {
+    papers: papers.map((p) => ({
+      ...p,
+      tags: normalizeArray(p.tags),
+      dataset_focus: normalizeArray(p.dataset_focus),
+      contribution_types: normalizeArray(p.contribution_types),
+      concept_tags: normalizeArray(p.concept_tags),
+      citations: p.citations ?? {},
+      links: p.links ?? {},
+      scholar: p.scholar ?? {},
+      relations: p.relations ?? null,
+    })),
+    citationsMeta,
+  };
+}
+
+/* -------------------------
+   State
+------------------------- */
+
+const state = {
+  papers: [],
+  filtered: [],
+  byId: new Map(),
+  citationsMeta: null,
+
+  q: "",
+  impact: "",
+  tag: "",
+  sort: "new", // new | old | title | cites
+
+  activePaperId: null,
+  activeCitePaperId: null,
+};
+
+/* -------------------------
+   Routing (DOM toggle)
+------------------------- */
+
+function setActiveNav(route) {
+  const navIndex = $("navIndex");
+  const navAbout = $("navAbout");
+  const navPolicy = $("navPolicy");
+  if (!navIndex || !navAbout || !navPolicy) return;
+
+  navIndex.classList.toggle("active", route === "index");
+  navAbout.classList.toggle("active", route === "about");
+  navPolicy.classList.toggle("active", route === "policy");
+}
+
+function showPageByRoute(route) {
+  const indexMain = $("indexMain");
+  const aboutMain = $("aboutMain");
+  const policyMain = $("policyMain");
+
+  const controls = $("controls");
+  const citeMeta = $("citeMeta");
+
+  const isIndex = route === "index";
+  const isAbout = route === "about";
+  const isPolicy = route === "policy";
+
+  if (indexMain) indexMain.hidden = !isIndex;
+  if (aboutMain) aboutMain.hidden = !isAbout;
+  if (policyMain) policyMain.hidden = !isPolicy;
+
+  // Controls + cite meta only on index
+  if (controls) controls.style.display = isIndex ? "" : "none";
+  if (citeMeta) citeMeta.style.display = isIndex ? "" : "none";
+
+  if (route !== "index") {
+  const host = $("indexIntro");
+  if (host) host.dataset.rendered = "0";
+}
+
+
+  setActiveNav(route);
+
+  // Only show explainer on index
+  if (isIndex) renderIndexIntroOnce();
+}
+
+function showPageFromLocation() {
+  const route = routeFromPathname(window.location.pathname);
+  showPageByRoute(route);
+}
+
+function bindNavigation() {
+  rewriteNavHrefs();
+
+  document.addEventListener("click", (e) => {
+    const a = e.target.closest("a[data-nav]");
+    if (!a) return;
+
+    const href = a.getAttribute("href");
+    if (!href) return;
+
+    const url = new URL(href, window.location.origin);
+    if (url.origin !== window.location.origin) return;
+
+    e.preventDefault();
+    history.pushState({}, "", url.pathname);
+
+    // Close modals when navigating
+    closeCiteModal();
+    closePaperModal();
+
+    showPageFromLocation();
+  });
+
+  window.addEventListener("popstate", () => {
+    closeCiteModal();
+    closePaperModal();
+    showPageFromLocation();
+  });
+}
+
+/* -------------------------
+   Filtering + sorting
+------------------------- */
+
+function recomputeFilters() {
+  const q = state.q.trim().toLowerCase();
+  const impact = state.impact.trim();
+  const tag = state.tag.trim();
+
+  const filtered = state.papers.filter((p) => {
+    if (impact && String(p.impact_type || "") !== impact) return false;
+    if (tag && !normalizeArray(p.tags).includes(tag)) return false;
+
+    if (!q) return true;
+
+    const hay = [
+      p.title,
+      formatAuthors(p.authors),
+      p.venue,
+      p.year,
+      p.publication_status,
+      ...(p.tags || []),
+      ...(p.dataset_focus || []),
+      ...(p.contribution_types || []),
+      ...(p.concept_tags || []),
+    ]
+      .filter(Boolean)
+      .join(" · ")
+      .toLowerCase();
+
+    return hay.includes(q);
+  });
+
+  if (state.sort === "new") {
+    filtered.sort((a, b) => (b.year || 0) - (a.year || 0));
+  } else if (state.sort === "old") {
+    filtered.sort((a, b) => (a.year || 0) - (b.year || 0));
+  } else if (state.sort === "title") {
+    filtered.sort((a, b) => String(a.title || "").localeCompare(String(b.title || "")));
+  } else if (state.sort === "cites") {
+    filtered.sort((a, b) => getCitationsCount(b) - getCitationsCount(a) || (b.year || 0) - (a.year || 0));
+  }
+
+  state.filtered = filtered;
+
+  const totalEl = $("total");
+  const countEl = $("count");
+  if (totalEl) totalEl.textContent = String(state.papers.length);
+  if (countEl) countEl.textContent = String(state.filtered.length);
+}
+
+/* -------------------------
+   Rendering cards into #list
+------------------------- */
+
+function renderList() {
   const list = $("list");
-  list.innerHTML = "";
+  if (!list) return;
 
-  if (papers.length === 0) {
-    list.appendChild(
-      el("div", { class: "card" }, [
-        el("h2", {}, ["No results"]),
-        el("div", { class: "why" }, ["Try clearing filters or using a different query."])
-      ])
-    );
-    $("count").textContent = "0";
-    return;
-  }
+  // Ensure explainer exists (index only)
+  renderIndexIntroOnce();
 
-  for (const p of papers) {
-    const chips = [];
+  const html = state.filtered
+    .map((p) => {
+      const venueYear = [p.venue, p.year].filter(Boolean).join(" · ");
+      const cites = getCitationsCount(p);
 
-    // Citations chip — Option I: show for all papers.
-    const c = citationCount(p);
-    if (c !== null) {
-      const asOf = p?.citations?.last_checked_utc;
-      const title = asOf ? `Citations (checked ${asOf})` : "Citations";
-      chips.push(el("span", { class: "chip", title }, [`Cited by ${formatCitationsExact(c)}`]));
-    } else {
-      chips.push(el("span", { class: "chip", title: "Citations not available yet" }, ["Cited by —"]));
+      const pubLabel = publicationLabel(p);
+      const pubTip = publicationTooltip(p);
+
+      // Paper + Venue links
+      const paperUrl = pickPdfLink(p) || pickVenueLink(p)?.url || "";
+      const venue = pickVenueLink(p);
+      const venueUrl = venue?.url || "";
+
+      const paperHtml = paperUrl
+        ? `<a class="linkBtn" href="${escapeHtml(paperUrl)}" target="_blank" rel="noreferrer"
+             title="${escapeHtml(isCanonicalPreprint(p) ? "Canonical source (preprint)" : "Canonical peer-reviewed link")}">Paper</a>`
+        : isPeerReviewed(p)
+          ? `<span class="smallMeta">No peer-reviewed link.</span>`
+          : `<span class="smallMeta">No link.</span>`;
+
+      const showVenue = venueUrl && venueUrl !== paperUrl;
+      const venueHtml = showVenue
+        ? `<a class="linkBtn" href="${escapeHtml(venueUrl)}" target="_blank" rel="noreferrer"
+             title="Proceedings / journal landing page">Venue</a>`
+        : "";
+
+      const citeChip = cites
+        ? `<span class="chip" title="Google Scholar snapshot. Context, not rank."><strong>Cited by ${cites.toLocaleString()}</strong></span>`
+        : "";
+
+      const pubChip = pubLabel
+        ? `<span class="chip" title="${escapeHtml(pubTip)}">${escapeHtml(pubLabel)}</span>`
+        : "";
+
+      return `
+        <article class="card" data-paper-id="${escapeHtml(p.id)}">
+          <div class="cardTop">
+            <div style="min-width:0;">
+              <h2>
+                <a href="#" data-open-paper="${escapeHtml(p.id)}">${escapeHtml(p.title || "(untitled)")}</a>
+              </h2>
+              <div class="smallMeta">
+                ${escapeHtml(formatAuthors(p.authors))}${venueYear ? ` · ${escapeHtml(venueYear)}` : ""}
+              </div>
+            </div>
+          </div>
+
+          ${p.why_it_matters ? `<div class="why">${escapeHtml(String(p.why_it_matters))}</div>` : ""}
+
+          <div class="badgeRow">
+            ${citeChip}
+            ${pubChip}
+            ${p.impact_type ? `<span class="chip">${escapeHtml(toTitleCase(p.impact_type))}</span>` : ""}
+            ${(p.tags || []).slice(0, 6).map((t) => `<span class="chip">${escapeHtml(t)}</span>`).join("")}
+          </div>
+
+          <div class="cardActions">
+            ${paperHtml}
+            ${venueHtml}
+            <button class="citeBtn" type="button" data-open-cite="${escapeHtml(p.id)}" title="Open BibTeX + Scholar link">Cite</button>
+          </div>
+        </article>
+      `;
+    })
+    .join("");
+
+  list.innerHTML = html;
+}
+
+function renderChipRow(items, strong = false) {
+  const arr = normalizeArray(items).filter(Boolean);
+  if (!arr.length) return `<span class="smallMeta">None listed.</span>`;
+  return arr
+    .map((x) =>
+      strong
+        ? `<span class="chip"><strong>${escapeHtml(String(x))}</strong></span>`
+        : `<span class="chip">${escapeHtml(String(x))}</span>`
+    )
+    .join("");
+}
+
+function renderSection(title, innerHtml) {
+  return `
+    <div class="section">
+      <div class="sectionTitle">${escapeHtml(title)}</div>
+      <div class="badgeRow" style="margin-top:6px;">${innerHtml}</div>
+    </div>
+  `;
+}
+
+/* Bind list delegation ONCE */
+function bindListDelegation() {
+  const list = $("list");
+  if (!list) return;
+
+  list.addEventListener("click", (e) => {
+    const citeBtn = e.target.closest("[data-open-cite]");
+    if (citeBtn) {
+      e.preventDefault();
+      openCiteModal(citeBtn.getAttribute("data-open-cite"));
+      return;
     }
 
-    // Core chips
-    chips.push(
-      el("span", { class: "chip" }, [String(p.year ?? "")]),
-      el("span", { class: "chip" }, [String(p.venue ?? "")]),
-      el("span", { class: "chip" }, [String(p.impact_type ?? "")])
-    );
-
-    // Tag chips
-    for (const t of (p.tags || [])) chips.push(el("span", { class: "chip" }, [t]));
-
-    const cleanedChips = chips.filter(ch => ch.textContent.trim().length > 0);
-
-    // Title clickable to arXiv if available
-    const titleNode = p.links?.arxiv
-      ? el("a", { href: p.links.arxiv, target: "_blank", rel: "noreferrer" }, [p.title || "(untitled)"])
-      : document.createTextNode(p.title || "(untitled)");
-
-    // --- Cite button (define BEFORE links) ---
-    const citeBtn = el("button", {
-      class: "linkAction",
-      type: "button",
-      title: "Copy BibTeX"
-    }, [
-      el("svg", {class: "citeIcon", viewBox: "0 0 24 24", fill: "none", "aria-hidden": "true"}, [
-        el("path", {
-          d: "M12 3 2 8l10 5 10-5-10-5Z",
-          stroke: "currentColor",
-          "stroke-width": "1.8",
-          "stroke-linejoin": "round"
-        }),
-        el("path", {
-          d: "M6 10v5c0 1 3 3 6 3s6-2 6-3v-5",
-          stroke: "currentColor",
-          "stroke-width": "1.8",
-          "stroke-linecap": "round"
-        }),
-        el("path", {
-          d: "M22 8v6",
-          stroke: "currentColor",
-          "stroke-width": "1.8",
-          "stroke-linecap": "round"
-        }),
-        el("path", {
-          d: "M22 14c0 1-1.2 2-2.7 2",
-          stroke: "currentColor",
-          "stroke-width": "1.8",
-          "stroke-linecap": "round"
-        })
-      ]),
-      "Cite"
-    ]);
-
-    citeBtn.addEventListener("click", () => {
-      if (typeof openCiteModal === "function") openCiteModal(p);
-    });
-
-    // Links row (Cite on the same line)
-    const links = el("div", { class: "links" }, [
-      linkOrNull(p.links?.arxiv, "arXiv"),
-      linkOrNull(p.links?.pdf, "PDF"),
-      linkOrNull(p.links?.code, "Code"),
-      linkOrNull(p.links?.project, "Project"),
-      citeBtn
-    ].filter(Boolean));
-
-    const card = el("div", { class: "card" }, [
-      el("div", { class: "cardTop" }, [
-        el("div", {}, [
-          el("h2", {}, [titleNode]),
-          el("div", { class: "smallMeta" }, [(p.authors || []).join(", ")])
-        ])
-      ]),
-      el("div", { class: "badgeRow" }, cleanedChips),
-      links,
-      el("div", { class: "why" }, [p.why_it_matters || ""])
-    ]);
-
-    list.appendChild(card);
-  }
-
-  $("count").textContent = String(papers.length);
-}
-
-
-function applyFilters(all) {
-  const q = $("q").value.trim().toLowerCase();
-  const impact = $("impact").value;
-  const tag = $("tag").value;
-  const sort = $("sort").value;
-
-  let out = all.filter(p => {
-    if (impact && p.impact_type !== impact) return false;
-    if (tag && !(p.tags || []).includes(tag)) return false;
-    if (q && !paperText(p).includes(q)) return false;
-    return true;
+    const openPaper = e.target.closest("[data-open-paper]");
+    if (openPaper) {
+      e.preventDefault();
+      openPaperModal(openPaper.getAttribute("data-open-paper"));
+    }
   });
-
-  if (sort === "new") out.sort((a, b) => (b.year - a.year) || String(a.title).localeCompare(String(b.title)));
-  if (sort === "old") out.sort((a, b) => (a.year - b.year) || String(a.title).localeCompare(String(b.title)));
-  if (sort === "title") out.sort((a, b) => String(a.title).localeCompare(String(b.title)));
-
-  // Sort by citations (descending), missing citations last
-  if (sort === "cites") {
-    out.sort((a, b) => {
-      const ca = citationCount(a);
-      const cb = citationCount(b);
-      const va = ca === null ? -1 : ca;
-      const vb = cb === null ? -1 : cb;
-      return (vb - va) || (b.year - a.year) || String(a.title).localeCompare(String(b.title));
-    });
-  }
-
-  renderList(out);
 }
 
-// -------------------------
-// Main
-// -------------------------
+/* -------------------------
+   Controls binding
+------------------------- */
+
+function populateFilters() {
+  const impactSel = $("impact");
+  const tagSel = $("tag");
+
+  if (impactSel) {
+    const impacts = Array.from(new Set(state.papers.map((p) => p.impact_type).filter(Boolean))).sort((a, b) =>
+      String(a).localeCompare(String(b))
+    );
+    impactSel.innerHTML =
+      `<option value="">All impact types</option>` +
+      impacts.map((x) => `<option value="${escapeHtml(x)}">${escapeHtml(toTitleCase(x))}</option>`).join("");
+  }
+
+  if (tagSel) {
+    const tags = Array.from(new Set(state.papers.flatMap((p) => p.tags || []).filter(Boolean))).sort((a, b) =>
+      String(a).localeCompare(String(b))
+    );
+    tagSel.innerHTML =
+      `<option value="">All tags</option>` +
+      tags.map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
+  }
+}
+
+function bindControls() {
+  const q = $("q");
+  const impact = $("impact");
+  const tag = $("tag");
+  const sort = $("sort");
+  const clear = $("clear");
+
+  if (q) {
+    q.addEventListener("input", () => {
+      state.q = q.value || "";
+      recomputeFilters();
+      renderList();
+    });
+  }
+  if (impact) {
+    impact.addEventListener("change", () => {
+      state.impact = impact.value || "";
+      recomputeFilters();
+      renderList();
+    });
+  }
+  if (tag) {
+    tag.addEventListener("change", () => {
+      state.tag = tag.value || "";
+      recomputeFilters();
+      renderList();
+    });
+  }
+  if (sort) {
+    sort.addEventListener("change", () => {
+      state.sort = sort.value || "new";
+      recomputeFilters();
+      renderList();
+    });
+  }
+  if (clear) {
+    clear.addEventListener("click", () => {
+      state.q = "";
+      state.impact = "";
+      state.tag = "";
+      state.sort = "new";
+      if (q) q.value = "";
+      if (impact) impact.value = "";
+      if (tag) tag.value = "";
+      if (sort) sort.value = "new";
+      recomputeFilters();
+      renderList();
+    });
+  }
+}
+
+/* -------------------------
+   Modals
+------------------------- */
+
+function setModalOpen(modalEl, open) {
+  if (!modalEl) return;
+  modalEl.setAttribute("aria-hidden", open ? "false" : "true");
+}
+
+/* --- Cite modal --- */
+
+function openCiteModal(paperId) {
+  const p = state.byId.get(paperId);
+  if (!p) return;
+
+  state.activeCitePaperId = paperId;
+
+  const citeModal = $("citeModal");
+  const citeTitle = $("citeTitle");
+  const citeSubtitle = $("citeSubtitle");
+  const bibtexBox = $("bibtexBox");
+  const citeFootnote = $("citeFootnote");
+  const openScholar = $("openScholar");
+
+  if (citeTitle) citeTitle.textContent = "Cite";
+  if (citeSubtitle) {
+    const bits = [];
+    if (p.venue) bits.push(p.venue);
+    if (p.year) bits.push(p.year);
+    citeSubtitle.textContent = `${p.title || ""}${bits.length ? ` · ${bits.join(" · ")}` : ""}`;
+  }
+  if (bibtexBox) bibtexBox.value = p.bibtex ? String(p.bibtex) : makeBibTeX(p);
+
+  const c = p.citations || {};
+  const foot = [];
+  const cites = getCitationsCount(p);
+  if (cites) foot.push(`Cited by ${cites.toLocaleString()}`);
+  if (c.snapshot_year) foot.push(`Snapshot: ${c.snapshot_year}`);
+  if (c.source) foot.push(`Source: ${c.source}`);
+  if (citeFootnote) citeFootnote.textContent = foot.join(" · ");
+
+  const scholarUrl = safeUrl(p?.scholar?.scholar_url) || safeUrl(p?.scholar_url) || "";
+  if (openScholar) {
+    if (scholarUrl) {
+      openScholar.href = scholarUrl;
+      openScholar.style.display = "";
+    } else {
+      openScholar.href = "#";
+      openScholar.style.display = "none";
+    }
+  }
+
+  setModalOpen(citeModal, true);
+}
+
+function closeCiteModal() {
+  state.activeCitePaperId = null;
+  setModalOpen($("citeModal"), false);
+}
+
+function bindCiteModal() {
+  const citeOverlay = $("citeOverlay");
+  const citeClose = $("citeClose");
+  const closeBibtex = $("closeBibtex");
+  const copyBibtex = $("copyBibtex");
+
+  if (citeOverlay) citeOverlay.addEventListener("click", closeCiteModal);
+  if (citeClose) citeClose.addEventListener("click", closeCiteModal);
+  if (closeBibtex) closeBibtex.addEventListener("click", closeCiteModal);
+
+  if (copyBibtex) {
+    copyBibtex.addEventListener("click", async () => {
+      const box = $("bibtexBox");
+      const text = box ? box.value || "" : "";
+      try {
+        await navigator.clipboard.writeText(text);
+      } catch {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.style.position = "fixed";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+      }
+    });
+  }
+}
+
+/* --- Paper modal --- */
+
+function openPaperModal(paperId) {
+  const p = state.byId.get(paperId);
+  if (!p) return;
+
+  state.activePaperId = paperId;
+
+  const paperModal = $("paperModal");
+  const paperTitle = $("paperTitle");
+  const paperSubtitle = $("paperSubtitle");
+  const paperBadges = $("paperBadges");
+  const paperLinks = $("paperLinks");
+  const paperWhy = $("paperWhy");
+  const paperRelations = $("paperRelations");
+  const paperCiteBtn = $("paperCiteBtn");
+
+  if (paperTitle) paperTitle.textContent = p.title || "Paper";
+  if (paperSubtitle) {
+    const bits = [];
+    const a = formatAuthors(p.authors);
+    if (a) bits.push(a);
+    const vy = [p.venue, p.year].filter(Boolean).join(" · ");
+    if (vy) bits.push(vy);
+    paperSubtitle.textContent = bits.join(" · ");
+  }
+
+  if (paperBadges) {
+    const chips = [];
+    const cites = getCitationsCount(p);
+    if (cites) chips.push(`<span class="chip" title="Google Scholar snapshot. Context, not rank."><strong>Cited by ${cites.toLocaleString()}</strong></span>`);
+    const pub = publicationLabel(p);
+    if (pub) chips.push(`<span class="chip" title="${escapeHtml(publicationTooltip(p))}">${escapeHtml(pub)}</span>`);
+    if (p.impact_type) chips.push(`<span class="chip">${escapeHtml(toTitleCase(p.impact_type))}</span>`);
+    for (const t of (p.tags || []).slice(0, 12)) chips.push(`<span class="chip">${escapeHtml(t)}</span>`);
+    paperBadges.innerHTML = chips.join("");
+  }
+
+  if (paperLinks) {
+    const out = [];
+
+    const paperUrl = pickPdfLink(p) || pickVenueLink(p)?.url || "";
+    const venue = pickVenueLink(p);
+    const venueUrl = venue?.url || "";
+
+    if (paperUrl) {
+      out.push(
+          `<a class="linkBtn" href="${escapeHtml(paperUrl)}" target="_blank" rel="noreferrer"
+           title="${escapeHtml(isCanonicalPreprint(p) ? "Canonical source (preprint)" : "Canonical peer-reviewed link")}">Paper</a>`
+      );
+    } else {
+      out.push(isPeerReviewed(p) ? `<span class="smallMeta">No peer-reviewed link.</span>` : `<span class="smallMeta">No link.</span>`);
+    }
+
+    if (venueUrl && venueUrl !== paperUrl) {
+      out.push(
+          `<a class="linkBtn" href="${escapeHtml(venueUrl)}" target="_blank" rel="noreferrer" title="Proceedings / journal landing page">Venue</a>`
+      );
+    }
+
+    const scholarUrl = safeUrl(p?.scholar?.scholar_url) || safeUrl(p?.scholar_url) || "";
+    if (scholarUrl) {
+      out.push(`<a class="linkBtn" href="${escapeHtml(scholarUrl)}" target="_blank" rel="noreferrer">Scholar</a>`);
+    }
+
+    paperLinks.innerHTML = out.join(" ");
+  }
+
+  if (paperWhy) {
+    const blocks = [];
+
+    if (p.why_it_matters) {
+      blocks.push(`<div class="why">${escapeHtml(String(p.why_it_matters))}</div>`);
+    }
+
+    const contrib = normalizeArray(p.contribution_types).filter(Boolean);
+    const datasets = normalizeArray(p.dataset_focus).filter(Boolean);
+    const concepts = normalizeArray(p.concept_tags).filter(Boolean);
+
+    if (contrib.length) blocks.push(renderSection("Contribution types", renderChipRow(contrib.map(toTitleCase), true)));
+    if (datasets.length) blocks.push(renderSection("Dataset focus", renderChipRow(datasets)));
+    if (concepts.length) blocks.push(renderSection("Concept tags", renderChipRow(concepts)));
+
+    if (isCanonicalPreprint(p) && p.editorial_note) {
+      blocks.push(`
+      <div class="section">
+        <div class="sectionTitle">Editorial note</div>
+        <div class="smallMeta" style="margin-top:0;">${escapeHtml(String(p.editorial_note))}</div>
+      </div>
+    `);
+    }
+
+    paperWhy.innerHTML = blocks.join("");
+  }
+
+  if (paperRelations) {
+    const rel = p.relations;
+    if (!rel) {
+      paperRelations.innerHTML = `<span class="smallMeta">None listed.</span>`;
+    } else if (typeof rel === "string") {
+      paperRelations.textContent = rel;
+    } else if (Array.isArray(rel)) {
+      paperRelations.innerHTML = rel
+        .map((r) => {
+          if (r && typeof r === "object") {
+            const type = r.type ? `<span class="relationType">${escapeHtml(r.type)}</span>` : "";
+            const label = r.target_title || r.target || r.paper || r.id || "Related";
+            const tid = r.target_id || r.paper_id || r.id || r.target || "";
+            const link = tid
+              ? `<a href="#" class="relationLink" data-open-paper="${escapeHtml(tid)}">${escapeHtml(label)}</a>`
+              : `<span>${escapeHtml(label)}</span>`;
+            const note = r.note ? `<span class="smallMeta">${escapeHtml(r.note)}</span>` : "";
+            return `<div class="relationItem">${type}${link}${note}</div>`;
+          }
+          return `<div class="relationItem">${escapeHtml(String(r))}</div>`;
+        })
+        .join("");
+    } else {
+      paperRelations.innerHTML = `<pre class="smallMeta" style="white-space:pre-wrap; margin:0;">${escapeHtml(
+        JSON.stringify(rel, null, 2)
+      )}</pre>`;
+    }
+  }
+
+  if (paperCiteBtn) {
+    paperCiteBtn.onclick = () => openCiteModal(paperId);
+  }
+
+  setModalOpen(paperModal, true);
+}
+
+function closePaperModal() {
+  state.activePaperId = null;
+  setModalOpen($("paperModal"), false);
+}
+
+function bindPaperModal() {
+  const paperOverlay = $("paperOverlay");
+  const paperClose = $("paperClose");
+  const paperClose2 = $("paperClose2");
+
+  if (paperOverlay) paperOverlay.addEventListener("click", closePaperModal);
+  if (paperClose) paperClose.addEventListener("click", closePaperModal);
+  if (paperClose2) paperClose2.addEventListener("click", closePaperModal);
+}
+
+
+
+
+/* -------------------------
+   Citations meta
+------------------------- */
+
+function renderCitationsMeta() {
+  const el = $("citeMeta");
+  if (!el) return;
+
+  const m = state.citationsMeta;
+  if (!m) { el.textContent = ""; return; }
+
+  const bits = [];
+  if (m.source) bits.push(`Source: ${m.source}`);
+  if (m.snapshot_date || m.last_updated_utc) bits.push(`Snapshot: ${m.snapshot_date || m.last_updated_utc}`);
+  if (m.note || m.notes) bits.push(m.note || m.notes);
+  bits.push("Citations are context, not rank.");
+
+  el.textContent = bits.join(" · ");
+}
+
+
+/* -------------------------
+   Boot
+------------------------- */
 
 async function main() {
-  initCiteModal();
+  bindNavigation();
+  bindControls();
+  bindListDelegation();
+  bindCiteModal();
+  bindPaperModal();
 
-  const data = await loadPapersJson();
-  const all = data.papers;
+  // Route render (base-aware)
+  showPageFromLocation();
 
-  $("total").textContent = String(all.length);
+  try {
+    const { papers, citationsMeta } = await loadPapersJson();
+    state.papers = papers;
+    state.citationsMeta = citationsMeta;
+    state.byId = new Map(papers.map((p) => [p.id, p]));
 
-  fillSelect("impact", uniqSorted(all.map(p => p.impact_type).filter(Boolean)), "All impact types");
-  fillSelect("tag", uniqSorted(all.flatMap(p => p.tags || [])), "All tags");
+    populateFilters();
+    renderCitationsMeta();
 
-  // Optional: populate cite provenance line if present
-  const citeMetaEl = document.getElementById("citeMeta");
-  if (citeMetaEl && data.citations_meta) {
-    const notes = data.citations_meta.notes || "";
-    const src = data.citations_meta.source ? ` (${data.citations_meta.source})` : "";
-    const updated = data.citations_meta.last_updated_utc ? ` • updated ${data.citations_meta.last_updated_utc}` : "";
-    citeMetaEl.textContent = `${notes}${src}${updated}`.trim();
+    recomputeFilters();
+    renderList();
+  } catch (err) {
+    console.error(err);
+    const list = $("list");
+    if (list) {
+      list.innerHTML = `<div class="smallMeta">Failed to load papers: ${escapeHtml(err?.message || String(err))}</div>`;
+    }
   }
-
-  const rerender = () => applyFilters(all);
-
-  $("q").addEventListener("input", rerender);
-  $("impact").addEventListener("change", rerender);
-  $("tag").addEventListener("change", rerender);
-  $("sort").addEventListener("change", rerender);
-
-  $("clear").addEventListener("click", () => {
-    $("q").value = "";
-    $("impact").value = "";
-    $("tag").value = "";
-    $("sort").value = "new";
-    rerender();
-  });
-
-  rerender();
 }
 
-main().catch(err => {
-  console.error(err);
-  const list = document.getElementById("list");
-  if (list) {
-    list.innerHTML = "";
-    list.textContent = `Error: ${err?.message || String(err)}`;
-  }
-  const count = document.getElementById("count");
-  if (count) count.textContent = "0";
+// ESC closes modals
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape") return;
+
+  const citeOpen = $("citeModal")?.getAttribute("aria-hidden") === "false";
+  const paperOpen = $("paperModal")?.getAttribute("aria-hidden") === "false";
+
+  if (citeOpen) closeCiteModal();
+  else if (paperOpen) closePaperModal();
 });
+
+main();

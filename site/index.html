@@ -21,7 +21,7 @@
             <img class="logo" src="public/assets/brand/logo.png" alt="Diffusion Lighthouse logo" />
             <div>
               <h1>Diffusion Lighthouse</h1>
-              <p>Dataset-first index of diffusion papers.</p>
+              <p>A curated, dataset-first map of diffusion research.</p>
             </div>
           </div>
         </div>
@@ -32,7 +32,14 @@
         </div>
       </div>
 
-      <div class="controls">
+      <!-- NAV (polish) -->
+      <nav class="subnav" aria-label="Primary">
+        <a href="/" data-nav="index" class="subnavLink" id="navIndex">Index</a>
+        <a href="/about" data-nav="about" class="subnavLink" id="navAbout">About</a>
+        <a href="/editorial-policy" data-nav="policy" class="subnavLink" id="navPolicy">Editorial Policy</a>
+      </nav>
+
+      <div class="controls" id="controls">
         <input id="q" type="search" placeholder="Search title, authors, venue, tags..." autocomplete="off" />
 
         <select id="impact">
@@ -57,12 +64,226 @@
       <div class="smallMeta" id="citeMeta" style="margin-top:6px;"></div>
     </header>
 
-    <main class="container">
+    <!-- INDEX -->
+    <main class="container" id="indexMain">
+      <!-- ✅ Phase 2 change: app.js will render the explainer card here once -->
+      <div id="indexIntro"></div>
+
       <div id="list" class="list"></div>
+    </main>
+
+    <!-- ABOUT PAGE (hidden by default; app.js toggles) -->
+    <main class="container" id="aboutMain" hidden>
+      <article class="policy">
+        <div class="policyTop">
+          <h2>How to read Diffusion Lighthouse</h2>
+          <p class="muted" style="margin-top:6px;">
+            A curated, dataset-first map of diffusion research. Not a leaderboard. Not an archive.
+          </p>
+
+          <p style="margin-top:12px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </div>
+
+        <section class="policyCard">
+          <p style="margin-top:0;">
+            <strong>Diffusion Lighthouse</strong> helps you navigate the literature by highlighting papers that changed how
+            diffusion models are understood, trained, sampled, conditioned, or deployed.
+            Benchmarks are context — <strong>ideas are the map</strong>.
+          </p>
+          <p class="muted" style="margin-top:8px; margin-bottom:0;">
+            If you want completeness, use a search engine. If you want orientation, use Lighthouse.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>What “dataset-first” means</h3>
+          <p class="muted">
+            Papers are interpreted relative to the data distributions they target (images, text–image pairs, modalities, scale regimes),
+            not primarily by benchmark tables. We record <strong>dataset focus</strong> to make claims comparable and to show where methods apply.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>The inclusion bar</h3>
+          <p class="muted">
+            Most papers are excluded. Inclusion is editorial: a paper must be central to diffusion and deliver a lasting conceptual,
+            methodological, or dataset-level contribution.
+          </p>
+          <p class="muted" style="margin-top:10px;">
+            Read the full policy on <a href="/editorial-policy" data-nav="policy">Editorial Policy</a>.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>Publication labels</h3>
+          <div class="policyCard">
+            <ul class="muted" style="margin:0; padding-left:18px;">
+              <li style="margin:8px 0;">
+                <strong>Peer-reviewed</strong>: accepted at a major conference or journal; canonical proceedings/publisher links are shown.
+              </li>
+              <li style="margin:8px 0;">
+                <strong>Canonical preprint</strong>: included rarely when it defined the field before formal publication.
+                These entries are explicitly labeled and include an editorial note.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>Relations: why the map matters</h3>
+          <p class="muted">
+            Relations are editorial claims (e.g., “builds on”, “unifies”, “simplifies”). They turn a list into a map:
+            you can follow how ideas propagate from foundations → refinements → systems.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>Citations are context</h3>
+          <div class="policyCard">
+            <p class="muted" style="margin-top:0;">
+              “Cited by X” is a Google Scholar snapshot. It is not real-time, and it is not a ranking signal.
+              Lighthouse uses citations only as historical context.
+            </p>
+            <p class="muted" style="margin-bottom:0;">
+              Tip: sort by citations if you want a rough “gravity well” view — then read the <em>why</em> and the <em>relations</em>.
+            </p>
+          </div>
+
+          <p style="margin-top:14px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <!-- EDITORIAL POLICY PAGE (hidden by default; app.js toggles) -->
+    <main class="container" id="policyMain" hidden>
+      <article class="policy">
+        <div class="policyTop">
+          <h2>Editorial Policy</h2>
+          <p class="muted" style="margin-top:6px;">
+            How papers get included in Diffusion Lighthouse — and why we intentionally say “no” more than “yes”.
+          </p>
+
+          <p style="margin-top:12px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </div>
+
+        <section class="policyCard">
+          <p>
+            Diffusion Lighthouse is a <strong>curated, dataset-first index of diffusion research</strong>.
+            It prioritizes <strong>conceptual signal, provenance, and long-term relevance</strong> over benchmark performance.
+          </p>
+          <p class="muted" style="margin-top:8px; margin-bottom:0;">Inclusion is editorial, not automatic.</p>
+        </section>
+
+        <section class="policySection">
+          <h3>Scope</h3>
+          <p class="muted">
+            Lighthouse includes papers where <strong>diffusion models are the primary modeling framework</strong> (or a documented direct ancestor),
+            and where the contribution meaningfully advances understanding, methodology, or applicability of diffusion-based generative modeling.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>Inclusion Criteria</h3>
+          <p class="muted">
+            A paper must satisfy <strong>all Core Criteria</strong> and <strong>at least one Contribution Criterion</strong>.
+          </p>
+
+          <div class="policyCard">
+            <h4>Core Criteria (required)</h4>
+            <ol class="muted">
+              <li>
+                <strong>Peer-reviewed-first</strong> — peer-reviewed publications are preferred and shown with canonical proceedings/journal links.
+                <em>Rare exceptions</em> may be included as <strong>Canonical preprints</strong> when they defined the field before formal publication,
+                and are explicitly labeled with an editorial note.
+              </li>
+              <li>
+                <strong>Central use of diffusion</strong> — diffusion is the main modeling approach,
+                not a minor baseline or appendix comparison.
+              </li>
+              <li>
+                <strong>Original contribution</strong> — introduces or meaningfully refines a method, theory,
+                modeling assumption, or widely adopted practice. Pure scaling reports without conceptual insight are excluded.
+              </li>
+              <li>
+                <strong>Clear dataset grounding</strong> — clearly specifies the data distribution it models and motivates why
+                the approach applies to it. Purely toy or synthetic setups without broader relevance are excluded.
+              </li>
+            </ol>
+          </div>
+
+          <div class="policyCard">
+            <h4>Contribution Criteria (≥1 required)</h4>
+            <ul class="muted">
+              <li><strong>Foundational contribution</strong> — new diffusion formulation, objective, or theoretical interpretation.</li>
+              <li><strong>Methodological advancement</strong> — improvements in sampling, conditioning, efficiency, stability, or training dynamics.</li>
+              <li><strong>Dataset-level impact</strong> — introduces a new dataset, enables diffusion on a new modality, or makes a previously infeasible dataset tractable.</li>
+              <li><strong>Conceptual synthesis</strong> — unifies prior work, clarifies relationships between methods, or becomes a standard reference despite not optimizing benchmarks.</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>Canonical preprint exception</h3>
+          <div class="policyCard">
+            <p class="muted" style="margin-top:0;">
+              A paper may be included without peer-reviewed publication only if it is <strong>field-defining</strong>, has
+              <strong>clear downstream lineage</strong> in later peer-reviewed work, and has <strong>no peer-reviewed substitute</strong>.
+              These entries are explicitly labeled as <strong>Canonical preprint</strong> and include an editorial note.
+            </p>
+            <p class="muted" style="margin-bottom:0;">
+              The exception is <strong>rare by design</strong> — it does not apply to routine arXiv submissions, under-review work,
+              or short-lived benchmark trends.
+            </p>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>Explicit Exclusions</h3>
+          <div class="policyCard">
+            <p class="muted">Papers are excluded if they are primarily:</p>
+            <ul class="muted">
+              <li>Benchmark chasing with marginal gains and no new insight</li>
+              <li>Minor architectural tweaks without analysis</li>
+              <li>Narrow task-specific tricks that do not generalize</li>
+              <li>Redundant reformulations of existing ideas</li>
+            </ul>
+            <p class="muted" style="margin-top:8px; margin-bottom:0;">Exclusion is a feature, not a limitation.</p>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>Editorial Philosophy</h3>
+          <div class="policyCard">
+            <ul class="muted">
+              <li>
+                Lighthouse is <strong>dataset-first</strong> and <strong>idea-centric</strong>:
+                benchmarks and metrics are annotations, not organizing principles.
+              </li>
+              <li>Citation counts provide context, not authority.</li>
+              <li>Judgment is explicit, documented, and revisable.</li>
+            </ul>
+            <p class="muted" style="margin-top:10px; margin-bottom:0;">The goal is not completeness — it is clarity.</p>
+          </div>
+
+          <p style="margin-top:14px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </section>
+      </article>
     </main>
 
     <footer class="container muted footer">
       <span>Powered by <code>data/papers.yaml</code> → <code>papers.json</code></span>
+      <span style="margin-left:10px;">·</span>
+      <a href="/about" data-nav="about">About</a>
+      <span style="margin-left:10px;">·</span>
+      <a href="/editorial-policy" data-nav="policy">Editorial Policy</a>
     </footer>
 
     <!-- Cite modal -->
@@ -89,6 +310,36 @@
       </div>
     </div>
 
+    <!-- Paper detail modal -->
+    <div class="modal" id="paperModal" aria-hidden="true">
+      <div class="modalOverlay" id="paperOverlay"></div>
+
+      <div class="modalPanel" role="dialog" aria-modal="true" aria-labelledby="paperTitle">
+        <div class="modalHeader">
+          <div>
+            <div class="modalTitle" id="paperTitle">Paper</div>
+            <div class="modalSubtitle" id="paperSubtitle"></div>
+          </div>
+          <button class="iconBtn" id="paperClose" type="button" aria-label="Close">✕</button>
+        </div>
+
+        <div class="badgeRow" id="paperBadges"></div>
+
+        <div class="links" id="paperLinks"></div>
+
+        <div class="why" id="paperWhy"></div>
+
+        <div class="section">
+          <div class="sectionTitle">Relations</div>
+          <div class="relations" id="paperRelations"></div>
+        </div>
+
+        <div class="modalActions">
+          <button id="paperCiteBtn" type="button">Cite (BibTeX)</button>
+          <button id="paperClose2" type="button" class="ghostBtn">Close</button>
+        </div>
+      </div>
+    </div>
 
     <script src="app.js"></script>
   </body>

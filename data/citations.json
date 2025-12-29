@@ -1,44 +1,93 @@
 {
   "meta": {
-    "last_updated_utc": "2025-12-24T17:48:26Z",
+    "last_updated_utc": "2025-12-29T11:10:15Z",
     "notes": "Citations are best-effort snapshots. Scholar may block; Semantic Scholar may differ due to indexing.",
     "source": "google_scholar + semantic_scholar_fallback"
   },
   "papers": {
+    "classifier_free_guidance_2022": {
+      "citations": 5197,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
+      "resolved_url": "https://www.semanticscholar.org/paper/af9f365ed86614c800f082bd8eb14be76072ad16",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/af9f365ed86614c800f082bd8eb14be76072ad16",
+      "source_used": "semantic_scholar"
+    },
+    "classifier_guidance_2021": {
+      "citations": 10136,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
+      "resolved_url": "https://www.semanticscholar.org/paper/64ea8f180d0682e6c18d1eb688afdb2027c02794",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/64ea8f180d0682e6c18d1eb688afdb2027c02794",
+      "source_used": "semantic_scholar"
+    },
     "ddim_2020": {
-      "citations": 9989,
-      "last_checked_utc": "2025-12-24T17:48:26Z",
+      "citations": 10000,
+      "last_checked_utc": "2025-12-29T11:10:15Z",
       "query_used": "\"Denoising Diffusion Implicit Models\"",
       "resolved_url": "https://www.semanticscholar.org/paper/014576b866078524286802b1d0e18628520aa886",
-      "scholar_url": "https://scholar.google.com/scholar?cluster=15692403916484267912&hl=en&as_sdt=2005&sciodt=0,5",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/014576b866078524286802b1d0e18628520aa886",
       "source_used": "semantic_scholar"
     },
     "ddpm_2020": {
-      "citations": 25117,
-      "last_checked_utc": "2025-12-24T17:48:26Z",
+      "citations": 25188,
+      "last_checked_utc": "2025-12-29T11:10:15Z",
       "query_used": "\"Denoising Diffusion Probabilistic Models\" Ho Jain Abbeel",
       "resolved_url": "https://www.semanticscholar.org/paper/5c126ae3421f05768d8edd97ecd44b1364e2c99a",
-      "scholar_url": "https://scholar.google.com/scholar?cluster=622631041436591387&hl=en&as_sdt=2005&sciodt=0,5",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/5c126ae3421f05768d8edd97ecd44b1364e2c99a",
+      "source_used": "semantic_scholar"
+    },
+    "glide_2021": {
+      "citations": 4320,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
+      "resolved_url": "https://www.semanticscholar.org/paper/7002ae048e4b8c9133a55428441e8066070995cb",
+      "scholar_url": "https://scholar.google.com/scholar?cluster=15472303808406531445&hl=en&as_sdt=2005&sciodt=0,5",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/7002ae048e4b8c9133a55428441e8066070995cb",
+      "source_used": "semantic_scholar"
+    },
+    "imagen_2022": {
+      "citations": 7380,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
+      "resolved_url": "https://www.semanticscholar.org/paper/9695824d7a01fad57ba9c01d7d76a519d78d65e7",
+      "scholar_url": "https://scholar.google.com/scholar?cluster=2130901831690841916&hl=en&as_sdt=2005&sciodt=0,5",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/9695824d7a01fad57ba9c01d7d76a519d78d65e7",
       "source_used": "semantic_scholar"
     },
     "improved_ddpm_2021": {
-      "citations": 0,
-      "last_checked_utc": "2025-12-24T17:03:39Z",
+      "citations": 4638,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
       "query_used": "\"Improved Denoising Diffusion Probabilistic Models\"",
-      "scholar_url": "https://proceedings.mlr.press/v139/nichol21a.html"
+      "resolved_url": "https://www.semanticscholar.org/paper/de18baa4964804cf471d85a5a090498242d2e79f",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/de18baa4964804cf471d85a5a090498242d2e79f",
+      "source_used": "semantic_scholar"
+    },
+    "latent_diffusion_2022": {
+      "citations": 20628,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
+      "resolved_url": "https://www.semanticscholar.org/paper/c10075b3746a9f3dd5811970e93c8ca3ad39b39d",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/c10075b3746a9f3dd5811970e93c8ca3ad39b39d",
+      "source_used": "semantic_scholar"
     },
     "score_matching_2019": {
-      "citations": 0,
-      "last_checked_utc": "2025-12-24T17:03:39Z",
+      "citations": 4781,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
       "query_used": "\"Generative Modeling by Estimating Gradients of the Data Distribution\"",
-      "scholar_url": "https://proceedings.neurips.cc/paper/2019/hash/3001ef257407d5a371a96dcd947c7d93-Abstract.html?ref=https://githubhelp.com"
+      "resolved_url": "https://www.semanticscholar.org/paper/965359b3008ab50dd04e171551220ec0e7f83aba",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/965359b3008ab50dd04e171551220ec0e7f83aba",
+      "source_used": "semantic_scholar"
     },
     "score_sde_2021": {
-      "citations": 8647,
-      "last_checked_utc": "2025-12-24T17:48:26Z",
+      "citations": 8662,
+      "last_checked_utc": "2025-12-29T10:52:07Z",
       "query_used": "\"Score-Based Generative Modeling through Stochastic Differential Equations\"",
       "resolved_url": "https://www.semanticscholar.org/paper/633e2fbfc0b21e959a244100937c5853afca4853",
-      "scholar_url": "https://scholar.google.com/scholar?cluster=14592788616550656262&hl=en&as_sdt=2005&sciodt=0,5",
+      "scholar_url": "",
+      "semantic_scholar_url": "https://www.semanticscholar.org/paper/633e2fbfc0b21e959a244100937c5853afca4853",
       "source_used": "semantic_scholar"
     }
   }

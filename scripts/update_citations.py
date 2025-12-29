@@ -26,9 +26,13 @@ MAX_DELAY = int(os.environ.get("MAX_DELAY", "35"))
 # Semantic Scholar endpoints (no key required for light usage)
 S2_PAPER = "https://api.semanticscholar.org/graph/v1/paper/{paper_id}"
 S2_FIELDS = "title,citationCount,url,year,venue"
+S2_SEARCH = "https://api.semanticscholar.org/graph/v1/paper/search"
+S2_SEARCH_FIELDS = "paperId,title,year,venue,citationCount,url"
+
 
 class ScholarBlocked(Exception):
     pass
+
 
 def choose_delay():
     lo = MIN_DELAY
@@ -36,6 +40,7 @@ def choose_delay():
     if hi < lo:
         hi = lo
     return random.randint(lo, hi)
+
 
 def fetch_html(url, params=None, timeout=20):
     # type: (str, Optional[Dict[str, str]], int) -> str
@@ -49,12 +54,45 @@ def fetch_html(url, params=None, timeout=20):
         raise RuntimeError("HTTP {0}".format(r.status_code))
     return text
 
+
+def fetch_semantic_scholar_by_title(title):
+    # type: (str) -> Optional[Tuple[int, str]]
+    if not title:
+        return None
+    headers = {"User-Agent": UA}
+    r = requests.get(
+        S2_SEARCH,
+        params={"query": title, "limit": 5, "fields": S2_SEARCH_FIELDS},
+        headers=headers,
+        timeout=20,
+    )
+    if r.status_code == 429:
+        raise RuntimeError("Semantic Scholar HTTP 429")
+    if r.status_code >= 400:
+        raise RuntimeError("Semantic Scholar HTTP {0}".format(r.status_code))
+
+    js = r.json() or {}
+    data = js.get("data") or []
+    if not data:
+        return None
+
+    # pick the top result (usually fine for exact titles)
+    best = data[0]
+    cc = best.get("citationCount")
+    url = best.get("url") or ""
+    if isinstance(cc, int):
+        return (cc, url)
+    return None
+
+
+
 def parse_cited_by_anywhere(html):
     # type: (str) -> Optional[int]
     m = re.search(r"\bCited by\s+(\d+)\b", html)
     if m:
         return int(m.group(1))
     return None
+
 
 def parse_first_result(html):
     # type: (str) -> Optional[Tuple[int, str]]
@@ -90,9 +128,11 @@ def parse_first_result(html):
 
     return (citations, scholar_url)
 
+
 def update_one_by_query(query):
     html = fetch_html(SCHOLAR_BASE, params={"q": query}, timeout=20)
     return parse_first_result(html)
+
 
 def update_one_by_url(scholar_url):
     # Fetch cluster/cites URL directly and parse "Cited by N" anywhere in HTML
@@ -107,6 +147,7 @@ def update_one_by_url(scholar_url):
         return (citations, found_url or scholar_url)
     return (citations, scholar_url)
 
+
 def arxiv_id_from_url(arxiv_url):
     # type: (str) -> Optional[str]
     if not arxiv_url:
@@ -116,6 +157,7 @@ def arxiv_id_from_url(arxiv_url):
     if not m:
         return None
     return m.group(2)
+
 
 def doi_from_url(doi_url):
     # type: (str) -> Optional[str]
@@ -127,11 +169,12 @@ def doi_from_url(doi_url):
     m = re.search(r"doi\.org/(10\.\d{4,9}/\S+)", doi_url)
     return m.group(1) if m else None
 
+
 def fetch_semantic_scholar_citations(paper):
     # type: (dict) -> Optional[Tuple[int, str]]
     """
     Returns (citationCount, semantic_scholar_url) or None.
-    Prefer ARXIV id, then DOI.
+    Prefer ARXIV id, then DOI, then title search.
     """
     links = paper.get("links", {}) or {}
     arxiv = links.get("arxiv", "")
@@ -142,23 +185,28 @@ def fetch_semantic_scholar_citations(paper):
         paper_id = "ARXIV:{0}".format(aid)
     else:
         d = doi_from_url(doi)
-        if not d:
-            return None
-        paper_id = "DOI:{0}".format(d)
+        paper_id = "DOI:{0}".format(d) if d else None
 
     headers = {"User-Agent": UA}
-    url = S2_PAPER.format(paper_id=paper_id)
-    r = requests.get(url, params={"fields": S2_FIELDS}, headers=headers, timeout=20)
-    if r.status_code == 404:
-        return None
-    if r.status_code >= 400:
-        raise RuntimeError("Semantic Scholar HTTP {0}".format(r.status_code))
 
-    js = r.json()
-    cc = js.get("citationCount", None)
-    if isinstance(cc, int):
-        return (cc, js.get("url") or "")
-    return None
+    # 1) Try ARXIV/DOI lookup if we have it
+    if paper_id:
+        url = S2_PAPER.format(paper_id=paper_id)
+        r = requests.get(url, params={"fields": S2_FIELDS}, headers=headers, timeout=20)
+        if r.status_code == 429:
+            raise RuntimeError("Semantic Scholar HTTP 429")
+        if r.status_code != 404 and r.status_code >= 400:
+            raise RuntimeError("Semantic Scholar HTTP {0}".format(r.status_code))
+        if r.status_code != 404:
+            js = r.json()
+            cc = js.get("citationCount", None)
+            if isinstance(cc, int):
+                return (cc, js.get("url") or "")
+
+    # 2) Title-search fallback (handles missing ARXIV ids)
+    title = paper.get("title", "")
+    return fetch_semantic_scholar_by_title(title)
+
 
 def main():
     with open(PAPERS_YAML, "r", encoding="utf-8") as f:
@@ -231,12 +279,14 @@ def main():
         if citations is None:
             try:
                 fr = fetch_semantic_scholar_citations(p)
+                if fr is None:
+                    fr = fetch_semantic_scholar_by_title(p)
                 if fr is not None:
                     citations, resolved_url = fr
                     source_used = "semantic_scholar"
                     print("  Fallback used: Semantic Scholar")
                 else:
-                    print("  Fallback failed: Semantic Scholar had no match (missing arXiv/DOI?)")
+                    print("  Fallback failed: Semantic Scholar had no match (arXiv/DOI/title).")
             except Exception as e:
                 print("  Fallback error: {0}".format(e))
 
@@ -254,8 +304,12 @@ def main():
             {
                 "citations": citations,
                 "last_checked_utc": run_ts,
-                "scholar_url": scholar_url or resolved_url or "",
+                # scholar_url is ONLY for Google Scholar URLs (cluster/cites)
+                "scholar_url": scholar_url or (resolved_url if source_used == "google_scholar" else "") or "",
+                # keep resolved_url for debugging
                 "resolved_url": resolved_url or "",
+                # store semantic scholar URL explicitly
+                "semantic_scholar_url": resolved_url if source_used == "semantic_scholar" else "",
                 "source_used": source_used,
             }
         )
@@ -287,7 +341,7 @@ def main():
     write_json(CITATIONS_JSON, store)
 
     # Render README safely as module
-    os.system("python -m scripts.render_readme")
+    # os.system("python -m scripts.render_readme")
 
     print("Done.")
 

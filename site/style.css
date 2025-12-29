@@ -70,15 +70,15 @@ header{
 
 .brandRow{
   display:flex;
-  align-items:center;
+  align-items:flex-start;
   gap:12px;
 }
 
 .logo{
-  width:36px;
-  height:36px;
+  width:48px;
+  height:48px;
   flex-shrink:0;
-  border-radius:10px;
+  border-radius:14px;
   border:1px solid var(--border);
   background: rgba(15,22,35,.65);
   box-shadow: var(--shadow-sm);
@@ -87,15 +87,59 @@ header{
 
 .brand h1{
   margin:0;
-  font-size:22px;
-  line-height:1.1;
+  font-size:26px;
   letter-spacing:.2px;
+  line-height:1.15;
+}
+
+.brand p{
+  margin:6px 0 0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.35;
 }
 
 .brandRow p{
   margin:4px 0 0;
   color:var(--muted);
   font-size:13px;
+}
+
+/* =========================
+   Subnav (Index / Editorial Policy)
+   ========================= */
+
+.subnav{
+  display:flex;
+  gap:10px;
+  align-items:center;
+  margin-top:10px;
+  margin-bottom:4px;
+}
+
+.subnavLink{
+  display:inline-flex;
+  align-items:center;
+  padding:6px 10px;
+  border-radius:999px;
+  border:1px solid transparent;
+  color:var(--muted);
+  text-decoration:none;
+  background: transparent;
+  font-size:13px;
+}
+
+.subnavLink:hover{
+  border-color: rgba(155,210,255,.35);
+  color: var(--text);
+  background: rgba(15,22,35,.35);
+  text-decoration:none;
+}
+
+.subnavLink.active{
+  border-color: rgba(155,210,255,.35);
+  color: var(--text);
+  background: rgba(15,22,35,.55);
 }
 
 /* =========================
@@ -179,8 +223,8 @@ main{
 
 .list{
   display:grid;
-  gap:14px;
-  margin-top:16px;
+  gap:12px;
+  margin-top:14px;
 }
 
 /* =========================
@@ -195,7 +239,7 @@ main{
     rgba(11,18,32,.72)
   );
   border-radius:var(--radius-lg);
-  padding:14px;
+  padding:12px 12px 10px;
   box-shadow: var(--shadow-lg);
   transition:
     transform .12s ease,
@@ -215,7 +259,7 @@ main{
 
 .card h2{
   margin:0;
-  font-size:16px;
+  font-size:17px;
   line-height:1.25;
 }
 
@@ -224,16 +268,17 @@ main{
    ========================= */
 
 .smallMeta{
-  margin-top:6px;
-  font-size:12px;
   color:var(--muted);
+  font-size:12px;
+  margin-top:4px;
+  line-height:1.35;
 }
 
 .badgeRow{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
-  margin-top:10px;
+  margin-top:8px;
 }
 
 .chip{
@@ -253,7 +298,7 @@ main{
    ========================= */
 
 .links{
-  margin-top:10px;
+  margin-top:8px;
   display:flex;
   gap:12px;
   flex-wrap:wrap;
@@ -269,10 +314,10 @@ a:hover{
 }
 
 .why{
-  margin-top:10px;
-  font-size:13px;
-  line-height:1.5;
+  margin-top:8px;
   color: rgba(230,234,242,.92);
+  line-height:1.45;
+  font-size:13px;
 }
 
 /* =========================
@@ -290,7 +335,6 @@ a:hover{
 code{
   color:#c7d2fe;
 }
-
 
 /* =========================
    Cite button + modal
@@ -312,8 +356,9 @@ code{
   border-radius:12px;
   border:1px solid var(--border);
   background: rgba(15,22,35,.2);
-  color:var(--text); /* IMPORTANT: fixes invisible icon */
+  color:var(--text);
   cursor:pointer;
+  line-height: 1;
 }
 
 .citeBtn:hover{
@@ -422,10 +467,14 @@ code{
   background: rgba(15,22,35,.2);
   color: var(--text);
   text-decoration: none;
+  line-height: 1.2;
+  font-size: 13px;
+  box-sizing: border-box;
 }
 
 .linkBtn:hover{
   border-color: rgba(155,210,255,.55);
+  text-decoration: none;
 }
 
 .modalFootnote{
@@ -434,17 +483,12 @@ code{
   font-size: 12px;
 }
 
-.citeBtn {
-  color: var(--text);
-}
-
-
 .links{
   margin-top:10px;
   display:flex;
   gap:12px;
   flex-wrap:wrap;
-  align-items:center; /* keeps baseline aligned */
+  align-items:center;
 }
 
 /* Make link-actions consistent (anchors + buttons) */
@@ -454,9 +498,9 @@ code{
   align-items:center;
   gap:6px;
 
-  padding:0;                 /* remove pill padding */
-  border:0;                  /* remove button border */
-  background:transparent;    /* remove button bg */
+  padding:0;
+  border:0;
+  background:transparent;
   color:var(--link);
   font: inherit;
   cursor:pointer;
@@ -467,11 +511,85 @@ code{
   text-decoration:underline;
 }
 
-/* Icon should inherit link color */
 .links .citeIcon{
   width:15px;
   height:15px;
   opacity: .95;
-  transform: translateY(1px); /* optical alignment */
+  transform: translateY(1px);
 }
 
+.section{
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.sectionTitle{
+  font-size: 12px;
+  color: var(--muted);
+  margin-bottom: 8px;
+  letter-spacing: .2px;
+}
+
+.relations{
+  display: grid;
+  gap: 8px;
+}
+
+.relationItem{
+  display:flex;
+  flex-wrap:wrap;
+  gap:8px;
+  align-items:center;
+  color: var(--text);
+  font-size: 13px;
+}
+
+.relationType{
+  display:inline-flex;
+  align-items:center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(17,27,47,.55);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.relationLink{
+  color: var(--link);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.relationLink:hover{
+  text-decoration: underline;
+}
+
+.brand{
+  position:relative;
+}
+
+.brand::before{
+  content:"";
+  position:absolute;
+  inset:-12px;
+  background: radial-gradient(400px 200px at 0% 0%, rgba(155,210,255,.08), transparent 60%);
+  z-index:-1;
+}
+
+/* =========================
+   FINAL: Make PDF/DOI/PDF-like pills match Cite/Details sizing exactly
+   (this targets runtime <a class="linkBtn"> inside cards/modals)
+   ========================= */
+
+.cardActions a.linkBtn,
+#paperLinks a.linkBtn{
+  padding: 8px 10px !important;
+  border-radius: 12px !important;
+  line-height: 1 !important;
+  font-size: 13px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  box-sizing: border-box !important;
+}
