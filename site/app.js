@@ -9,6 +9,11 @@
 // - Renders an Index explainer once into #indexIntro (preferred), or falls back to inserting above #list
 // - Makes About link base-aware in the explainer
 //
+// PHASE 3 ADDITIONS (relations polish):
+// - Human-readable relation types ("builds_on" -> "Builds on")
+// - Resolves relation targets to paper titles (via state.byId)
+// - Shows Outgoing + Incoming relations in modal (incoming computed from all papers)
+//
 // FEATURES (kept):
 // - Uses existing DOM: #list, #q/#impact/#tag/#sort/#clear, KPIs, #citeMeta
 // - Uses existing modals: #citeModal and #paperModal (aria-hidden toggling)
@@ -172,6 +177,97 @@ function makeBibTeX(p) {
 }
 
 /* -------------------------
+   Relations polish
+------------------------- */
+
+const RELATION_HELP = {
+  builds_on: "Directly extends or refines ideas from this work.",
+  enables: "Makes this later work feasible or practical.",
+  unifies: "Connects previously separate ideas into one framework.",
+  contrasts_with: "Takes a different or opposing approach.",
+  precedes: "Earlier work that established foundations.",
+  simplifies: "Reduces complexity while preserving capability.",
+};
+
+
+function humanizeRelationType(t) {
+  const s = String(t || "").trim();
+  if (!s) return "";
+  return s
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^\w/, (c) => c.toUpperCase());
+}
+
+function resolveTargetId(r) {
+  return String(r?.target_id || r?.paper_id || r?.id || r?.target || r?.paper || "").trim();
+}
+
+function resolvePaperTitle(idOrTitle) {
+  const id = String(idOrTitle || "");
+  const hit = state.byId?.get(id);
+  if (hit?.title) return hit.title;
+  return id || "Related";
+}
+
+function buildIncomingRelationsIndex() {
+  const incoming = new Map();
+
+  for (const src of state.papers) {
+    const rels = Array.isArray(src.relations) ? src.relations : [];
+    for (const r of rels) {
+      if (!r || typeof r !== "object") continue;
+      const tid = resolveTargetId(r);
+      if (!tid) continue;
+
+      if (!incoming.has(tid)) incoming.set(tid, []);
+      incoming.get(tid).push({ source: src, relation: r });
+    }
+  }
+
+  for (const [k, arr] of incoming.entries()) {
+    arr.sort((a, b) => {
+      const ta = humanizeRelationType(a.relation?.type);
+      const tb = humanizeRelationType(b.relation?.type);
+      if (ta !== tb) return ta.localeCompare(tb);
+      return (b.source?.year || 0) - (a.source?.year || 0);
+    });
+  }
+
+  state.incoming = incoming;
+}
+
+function renderRelationsList(items) {
+  if (!items || !items.length) return `<span class="smallMeta">None listed.</span>`;
+
+  return items
+    .map((it) => {
+      const r = it?.relation || it; // supports {source, relation} for incoming
+      const typeTxt = humanizeRelationType(r?.type);
+      const typeHtml = typeTxt ? `<span class="relationType">${escapeHtml(typeTxt)}</span>` : "";
+
+      const tid = resolveTargetId(r);
+      const title = r?.target_title || resolvePaperTitle(tid) || "Related";
+
+      const link = tid
+        ? `<a href="#" class="relationLink" data-open-paper="${escapeHtml(tid)}">${escapeHtml(title)}</a>`
+        : `<span>${escapeHtml(title)}</span>`;
+
+      const note = r?.note ? `<span class="smallMeta">${escapeHtml(r.note)}</span>` : "";
+
+      const from = it?.source?.id
+        ? `<span class="smallMeta">From: <a href="#" class="relationLink" data-open-paper="${escapeHtml(
+            it.source.id
+          )}">${escapeHtml(it.source.title || it.source.id)}</a></span>`
+        : "";
+
+      return `<div class="relationItem">${typeHtml}${link}${note}${from}</div>`;
+    })
+    .join("");
+}
+
+/* -------------------------
    Base-path aware routing
 ------------------------- */
 
@@ -231,15 +327,6 @@ function rewriteNavHrefs() {
    Phase 2: “site explains itself”
 ------------------------- */
 
-function renderIndexExplainerOnce() {
-  const host = $("indexIntro");
-  if (!host) return;
-  if (host.dataset.rendered === "1") return;
-  host.innerHTML = renderIndexExplainer();
-  host.dataset.rendered = "1";
-}
-
-
 function renderIndexExplainer() {
   const aboutHref = joinBase("/about");
   return `
@@ -258,16 +345,25 @@ function renderIndexExplainer() {
 }
 
 function renderIndexIntroOnce() {
-  const host = $("indexIntro"); // ✅ must exist in index.html
-  if (!host) return;
+  const host = $("indexIntro"); // preferred host in index.html
+  if (host) {
+    if (host.dataset.rendered === "1") return;
+    host.innerHTML = renderIndexExplainer();
+    host.dataset.rendered = "1";
+    return;
+  }
 
-  // Only render once per page load
-  if (host.dataset.rendered === "1") return;
+  // fallback: insert above #list
+  const list = $("list");
+  if (!list) return;
+  const markerId = "indexIntroAuto";
+  if (document.getElementById(markerId)) return;
 
-  host.innerHTML = renderIndexExplainer();
-  host.dataset.rendered = "1";
+  const wrap = document.createElement("div");
+  wrap.id = markerId;
+  wrap.innerHTML = renderIndexExplainer();
+  list.parentNode.insertBefore(wrap, list);
 }
-
 
 /* -------------------------
    Data loading
@@ -310,6 +406,9 @@ const state = {
   filtered: [],
   byId: new Map(),
   citationsMeta: null,
+
+  // relations index
+  incoming: new Map(),
 
   q: "",
   impact: "",
@@ -354,12 +453,6 @@ function showPageByRoute(route) {
   // Controls + cite meta only on index
   if (controls) controls.style.display = isIndex ? "" : "none";
   if (citeMeta) citeMeta.style.display = isIndex ? "" : "none";
-
-  if (route !== "index") {
-  const host = $("indexIntro");
-  if (host) host.dataset.rendered = "0";
-}
-
 
   setActiveNav(route);
 
@@ -459,6 +552,7 @@ function recomputeFilters() {
 
 function renderList() {
   const list = $("list");
+  const relPreview = renderRelationsPreview(p, 3);
   if (!list) return;
 
   // Ensure explainer exists (index only)
@@ -519,6 +613,7 @@ function renderList() {
             ${p.impact_type ? `<span class="chip">${escapeHtml(toTitleCase(p.impact_type))}</span>` : ""}
             ${(p.tags || []).slice(0, 6).map((t) => `<span class="chip">${escapeHtml(t)}</span>`).join("")}
           </div>
+          ${relPreview ? `<div class="relationsPreview">${relPreview}</div>` : ""}
 
           <div class="cardActions">
             ${paperHtml}
@@ -532,6 +627,47 @@ function renderList() {
 
   list.innerHTML = html;
 }
+
+function humanizeRelationType(t) {
+  const map = {
+    builds_on: "builds on",
+    enables: "enables",
+    unifies: "unifies",
+    contrasts_with: "contrasts",
+    precedes: "precedes",
+    simplifies: "simplifies",
+    extends: "extends",
+    accelerates_sampling_of: "accelerates",
+    refines_training_of: "refines",
+  };
+  return map[String(t || "")] || String(t || "");
+}
+
+function renderRelationsPreview(p, limit = 3) {
+  const rels = Array.isArray(p?.relations) ? p.relations : [];
+  if (!rels.length) return "";
+
+  const shown = rels.slice(0, limit);
+  const more = rels.length - shown.length;
+
+  const html = shown
+    .map((r) => {
+      const tid = r?.target_id || r?.paper_id || r?.id || r?.target || "";
+      const targetObj = tid ? state.byId.get(tid) : null;
+      const label = r?.target_title || targetObj?.title || tid || "Related";
+      const type = humanizeRelationType(r?.type);
+
+      const target = tid
+        ? `<a href="#" data-open-paper="${escapeHtml(tid)}">${escapeHtml(label)}</a>`
+        : `<span>${escapeHtml(label)}</span>`;
+
+      return `<span class="relChip"><span class="relType">${escapeHtml(type)}</span> → ${target}</span>`;
+    })
+    .join("");
+
+  return html + (more > 0 ? `<span class="smallMeta" style="margin-left:8px;">+${more}</span>` : "");
+}
+
 
 function renderChipRow(items, strong = false) {
   const arr = normalizeArray(items).filter(Boolean);
@@ -761,6 +897,7 @@ function openPaperModal(paperId) {
   const paperCiteBtn = $("paperCiteBtn");
 
   if (paperTitle) paperTitle.textContent = p.title || "Paper";
+
   if (paperSubtitle) {
     const bits = [];
     const a = formatAuthors(p.authors);
@@ -773,11 +910,23 @@ function openPaperModal(paperId) {
   if (paperBadges) {
     const chips = [];
     const cites = getCitationsCount(p);
-    if (cites) chips.push(`<span class="chip" title="Google Scholar snapshot. Context, not rank."><strong>Cited by ${cites.toLocaleString()}</strong></span>`);
+
+    if (cites) {
+      chips.push(
+        `<span class="chip" title="Citation snapshot. Context, not rank."><strong>Cited by ${cites.toLocaleString()}</strong></span>`
+      );
+    }
+
     const pub = publicationLabel(p);
-    if (pub) chips.push(`<span class="chip" title="${escapeHtml(publicationTooltip(p))}">${escapeHtml(pub)}</span>`);
+    if (pub) {
+      chips.push(
+        `<span class="chip" title="${escapeHtml(publicationTooltip(p))}">${escapeHtml(pub)}</span>`
+      );
+    }
+
     if (p.impact_type) chips.push(`<span class="chip">${escapeHtml(toTitleCase(p.impact_type))}</span>`);
     for (const t of (p.tags || []).slice(0, 12)) chips.push(`<span class="chip">${escapeHtml(t)}</span>`);
+
     paperBadges.innerHTML = chips.join("");
   }
 
@@ -790,23 +939,25 @@ function openPaperModal(paperId) {
 
     if (paperUrl) {
       out.push(
-          `<a class="linkBtn" href="${escapeHtml(paperUrl)}" target="_blank" rel="noreferrer"
+        `<a class="linkBtn" href="${escapeHtml(paperUrl)}" target="_blank" rel="noreferrer"
            title="${escapeHtml(isCanonicalPreprint(p) ? "Canonical source (preprint)" : "Canonical peer-reviewed link")}">Paper</a>`
       );
     } else {
-      out.push(isPeerReviewed(p) ? `<span class="smallMeta">No peer-reviewed link.</span>` : `<span class="smallMeta">No link.</span>`);
+      out.push(
+        isPeerReviewed(p)
+          ? `<span class="smallMeta">No peer-reviewed link.</span>`
+          : `<span class="smallMeta">No link.</span>`
+      );
     }
 
     if (venueUrl && venueUrl !== paperUrl) {
       out.push(
-          `<a class="linkBtn" href="${escapeHtml(venueUrl)}" target="_blank" rel="noreferrer" title="Proceedings / journal landing page">Venue</a>`
+        `<a class="linkBtn" href="${escapeHtml(venueUrl)}" target="_blank" rel="noreferrer" title="Proceedings / journal landing page">Venue</a>`
       );
     }
 
     const scholarUrl = safeUrl(p?.scholar?.scholar_url) || safeUrl(p?.scholar_url) || "";
-    if (scholarUrl) {
-      out.push(`<a class="linkBtn" href="${escapeHtml(scholarUrl)}" target="_blank" rel="noreferrer">Scholar</a>`);
-    }
+    if (scholarUrl) out.push(`<a class="linkBtn" href="${escapeHtml(scholarUrl)}" target="_blank" rel="noreferrer">Scholar</a>`);
 
     paperLinks.innerHTML = out.join(" ");
   }
@@ -828,43 +979,83 @@ function openPaperModal(paperId) {
 
     if (isCanonicalPreprint(p) && p.editorial_note) {
       blocks.push(`
-      <div class="section">
-        <div class="sectionTitle">Editorial note</div>
-        <div class="smallMeta" style="margin-top:0;">${escapeHtml(String(p.editorial_note))}</div>
-      </div>
-    `);
+        <div class="section">
+          <div class="sectionTitle">Editorial note</div>
+          <div class="smallMeta" style="margin-top:0;">${escapeHtml(String(p.editorial_note))}</div>
+        </div>
+      `);
     }
 
     paperWhy.innerHTML = blocks.join("");
   }
 
+  // ✅ Relations polish: outgoing + incoming, title resolution, tooltips on relation types
   if (paperRelations) {
-    const rel = p.relations;
-    if (!rel) {
-      paperRelations.innerHTML = `<span class="smallMeta">None listed.</span>`;
-    } else if (typeof rel === "string") {
-      paperRelations.textContent = rel;
-    } else if (Array.isArray(rel)) {
-      paperRelations.innerHTML = rel
+    // Define editorial meaning for relation types (tooltip)
+    const RELATION_HELP = {
+      builds_on: "Directly extends or refines ideas from this work.",
+      enables: "Makes later work feasible or practical.",
+      unifies: "Connects previously separate ideas into one framework.",
+      contrasts_with: "Takes a different or opposing approach.",
+      precedes: "Earlier work that established foundations.",
+      simplifies: "Reduces complexity while preserving capability.",
+      extends: "Adds scope or capability on top of this work.",
+      accelerates_sampling_of: "Introduces a faster sampling method for this model family.",
+      refines_training_of: "Improves training choices, objectives, or schedules.",
+    };
+
+    // Render a relations array into HTML (safe + clickable)
+    const renderRelationsList = (rels) => {
+      if (!Array.isArray(rels) || rels.length === 0) {
+        return `<span class="smallMeta">None listed.</span>`;
+      }
+
+      return rels
         .map((r) => {
-          if (r && typeof r === "object") {
-            const type = r.type ? `<span class="relationType">${escapeHtml(r.type)}</span>` : "";
-            const label = r.target_title || r.target || r.paper || r.id || "Related";
-            const tid = r.target_id || r.paper_id || r.id || r.target || "";
-            const link = tid
-              ? `<a href="#" class="relationLink" data-open-paper="${escapeHtml(tid)}">${escapeHtml(label)}</a>`
-              : `<span>${escapeHtml(label)}</span>`;
-            const note = r.note ? `<span class="smallMeta">${escapeHtml(r.note)}</span>` : "";
-            return `<div class="relationItem">${type}${link}${note}</div>`;
+          if (!r || typeof r !== "object") {
+            return `<div class="relationItem">${escapeHtml(String(r))}</div>`;
           }
-          return `<div class="relationItem">${escapeHtml(String(r))}</div>`;
+
+          const typeKey = String(r.type || "");
+          const typeTip = RELATION_HELP[typeKey] || "";
+          const typeHtml = typeKey
+            ? `<span class="relationType" title="${escapeHtml(typeTip)}">${escapeHtml(typeKey)}</span>`
+            : "";
+
+          const targetId = r.target_id || r.paper_id || r.id || r.target || "";
+          const targetObj = targetId ? state.byId.get(targetId) : null;
+
+          // Prefer explicit title if provided; else resolve from id; else show id
+          const label = r.target_title || targetObj?.title || r.target || r.paper || r.id || "Related";
+
+          const linkHtml = targetId
+            ? `<a href="#" class="relationLink" data-open-paper="${escapeHtml(targetId)}">${escapeHtml(label)}</a>`
+            : `<span>${escapeHtml(label)}</span>`;
+
+          const noteHtml = r.note ? `<span class="smallMeta">${escapeHtml(String(r.note))}</span>` : "";
+
+          return `<div class="relationItem">${typeHtml}${linkHtml}${noteHtml}</div>`;
         })
         .join("");
-    } else {
-      paperRelations.innerHTML = `<pre class="smallMeta" style="white-space:pre-wrap; margin:0;">${escapeHtml(
-        JSON.stringify(rel, null, 2)
-      )}</pre>`;
-    }
+    };
+
+    const outgoing = Array.isArray(p.relations) ? p.relations : null;
+    const incoming = state.incoming?.get(paperId) || [];
+
+    const outgoingHtml = renderRelationsList(outgoing);
+    const incomingHtml = renderRelationsList(incoming);
+
+    paperRelations.innerHTML = `
+      <div class="section" style="margin-top:0;">
+        <div class="sectionTitle">Outgoing</div>
+        <div class="relations">${outgoingHtml}</div>
+      </div>
+
+      <div class="section" style="margin-top:14px;">
+        <div class="sectionTitle">Incoming</div>
+        <div class="relations">${incomingHtml}</div>
+      </div>
+    `;
   }
 
   if (paperCiteBtn) {
@@ -873,6 +1064,7 @@ function openPaperModal(paperId) {
 
   setModalOpen(paperModal, true);
 }
+
 
 function closePaperModal() {
   state.activePaperId = null;
@@ -888,9 +1080,6 @@ function bindPaperModal() {
   if (paperClose) paperClose.addEventListener("click", closePaperModal);
   if (paperClose2) paperClose2.addEventListener("click", closePaperModal);
 }
-
-
-
 
 /* -------------------------
    Citations meta
@@ -912,7 +1101,6 @@ function renderCitationsMeta() {
   el.textContent = bits.join(" · ");
 }
 
-
 /* -------------------------
    Boot
 ------------------------- */
@@ -932,6 +1120,9 @@ async function main() {
     state.papers = papers;
     state.citationsMeta = citationsMeta;
     state.byId = new Map(papers.map((p) => [p.id, p]));
+
+    // ✅ Build incoming relations index after byId is ready (for title resolution)
+    buildIncomingRelationsIndex();
 
     populateFilters();
     renderCitationsMeta();

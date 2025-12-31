@@ -593,3 +593,27 @@ code{
   align-items: center !important;
   box-sizing: border-box !important;
 }
+
+
+.relationsPreview {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.relChip {
+  display: inline-flex;
+  gap: 6px;
+  align-items: baseline;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(255,255,255,0.03);
+  font-size: 13px;
+}
+
+.relType {
+  opacity: 0.85;
+  font-weight: 600;
+}

@@ -22,6 +22,7 @@
             <div>
               <h1>Diffusion Lighthouse</h1>
               <p>A curated, dataset-first map of diffusion research.</p>
+              <p class="muted" style="margin-top:6px;">Not a leaderboard. Not an archive.</p>
             </div>
           </div>
         </div>
@@ -32,7 +33,7 @@
         </div>
       </div>
 
-      <!-- NAV (polish) -->
+      <!-- NAV -->
       <nav class="subnav" aria-label="Primary">
         <a href="/" data-nav="index" class="subnavLink" id="navIndex">Index</a>
         <a href="/about" data-nav="about" class="subnavLink" id="navAbout">About</a>
@@ -66,7 +67,7 @@
 
     <!-- INDEX -->
     <main class="container" id="indexMain">
-      <!-- ✅ Phase 2 change: app.js will render the explainer card here once -->
+      <!-- app.js renders intro/explainer here once -->
       <div id="indexIntro"></div>
 
       <div id="list" class="list"></div>
@@ -88,20 +89,27 @@
 
         <section class="policyCard">
           <p style="margin-top:0;">
-            <strong>Diffusion Lighthouse</strong> helps you navigate the literature by highlighting papers that changed how
-            diffusion models are understood, trained, sampled, conditioned, or deployed.
-            Benchmarks are context — <strong>ideas are the map</strong>.
+            <strong>Diffusion Lighthouse</strong> helps you navigate the diffusion literature by making
+            editorial judgment explicit.
+            It is not an exhaustive index and it does not rank papers by performance.
+            Instead, it surfaces work that shaped how diffusion models are conceptualized and used.
           </p>
-          <p class="muted" style="margin-top:8px; margin-bottom:0;">
-            If you want completeness, use a search engine. If you want orientation, use Lighthouse.
+          <p class="muted" style="margin-top:10px; margin-bottom:0;">
+            Benchmarks are context. Datasets define regimes. <strong>Ideas are the map.</strong>
           </p>
         </section>
 
         <section class="policySection">
           <h3>What “dataset-first” means</h3>
           <p class="muted">
-            Papers are interpreted relative to the data distributions they target (images, text–image pairs, modalities, scale regimes),
-            not primarily by benchmark tables. We record <strong>dataset focus</strong> to make claims comparable and to show where methods apply.
+            Papers are interpreted relative to the data distributions they target
+            (images, text–image pairs, scale regimes, modalities),
+            not primarily by benchmark scores.
+          </p>
+          <p class="muted">
+            Dataset focus helps clarify where a method applies,
+            which claims are comparable,
+            and why certain ideas mattered at the time they were introduced.
           </p>
         </section>
 
@@ -121,11 +129,11 @@
           <div class="policyCard">
             <ul class="muted" style="margin:0; padding-left:18px;">
               <li style="margin:8px 0;">
-                <strong>Peer-reviewed</strong>: accepted at a major conference or journal; canonical proceedings/publisher links are shown.
+                <strong>Peer-reviewed</strong>: accepted at a major conference or journal; canonical proceedings/journal links are shown.
               </li>
               <li style="margin:8px 0;">
-                <strong>Canonical preprint</strong>: included rarely when it defined the field before formal publication.
-                These entries are explicitly labeled and include an editorial note.
+                <strong>Canonical preprint</strong>: included only by exception when a technical report defined a direction before formal publication
+                and has clear downstream lineage. These entries are explicitly labeled and include an editorial note.
               </li>
             </ul>
           </div>
@@ -134,8 +142,8 @@
         <section class="policySection">
           <h3>Relations: why the map matters</h3>
           <p class="muted">
-            Relations are editorial claims (e.g., “builds on”, “unifies”, “simplifies”). They turn a list into a map:
-            you can follow how ideas propagate from foundations → refinements → systems.
+            Relations are editorial claims (e.g., “builds on”, “unifies”, “simplifies”).
+            They turn a list into a map: follow how ideas propagate from foundations → refinements → systems.
           </p>
         </section>
 
@@ -143,11 +151,12 @@
           <h3>Citations are context</h3>
           <div class="policyCard">
             <p class="muted" style="margin-top:0;">
-              “Cited by X” is a Google Scholar snapshot. It is not real-time, and it is not a ranking signal.
+              “Cited by X” is a best-effort snapshot (and may come from different sources).
+              It is not real-time, and it is not a ranking signal.
               Lighthouse uses citations only as historical context.
             </p>
             <p class="muted" style="margin-bottom:0;">
-              Tip: sort by citations if you want a rough “gravity well” view — then read the <em>why</em> and the <em>relations</em>.
+              Tip: sort by citations for a rough “gravity well” view — then open papers to read the <em>why</em> and the <em>relations</em>.
             </p>
           </div>
 
@@ -173,18 +182,20 @@
         </div>
 
         <section class="policyCard">
-          <p>
-            Diffusion Lighthouse is a <strong>curated, dataset-first index of diffusion research</strong>.
-            It prioritizes <strong>conceptual signal, provenance, and long-term relevance</strong> over benchmark performance.
+          <p style="margin-top:0;">
+            Diffusion Lighthouse is a <strong>curated, dataset-first map of diffusion research</strong>.
+            Inclusion is editorial, not automatic.
+            The goal is clarity, not completeness.
           </p>
-          <p class="muted" style="margin-top:8px; margin-bottom:0;">Inclusion is editorial, not automatic.</p>
         </section>
 
         <section class="policySection">
           <h3>Scope</h3>
           <p class="muted">
-            Lighthouse includes papers where <strong>diffusion models are the primary modeling framework</strong> (or a documented direct ancestor),
-            and where the contribution meaningfully advances understanding, methodology, or applicability of diffusion-based generative modeling.
+            Lighthouse includes papers where <strong>diffusion models are the primary modeling framework</strong>
+            (or a documented direct ancestor),
+            and where the contribution meaningfully advances understanding, methodology, or applicability
+            of diffusion-based generative modeling.
           </p>
         </section>
 
@@ -198,9 +209,8 @@
             <h4>Core Criteria (required)</h4>
             <ol class="muted">
               <li>
-                <strong>Peer-reviewed-first</strong> — peer-reviewed publications are preferred and shown with canonical proceedings/journal links.
-                <em>Rare exceptions</em> may be included as <strong>Canonical preprints</strong> when they defined the field before formal publication,
-                and are explicitly labeled with an editorial note.
+                <strong>Peer-reviewed-first</strong> — canonical proceedings or journal links are shown whenever available.
+                <em>Canonical preprints</em> are included only by exception and are explicitly labeled with an editorial note.
               </li>
               <li>
                 <strong>Central use of diffusion</strong> — diffusion is the main modeling approach,
@@ -222,8 +232,8 @@
             <ul class="muted">
               <li><strong>Foundational contribution</strong> — new diffusion formulation, objective, or theoretical interpretation.</li>
               <li><strong>Methodological advancement</strong> — improvements in sampling, conditioning, efficiency, stability, or training dynamics.</li>
-              <li><strong>Dataset-level impact</strong> — introduces a new dataset, enables diffusion on a new modality, or makes a previously infeasible dataset tractable.</li>
-              <li><strong>Conceptual synthesis</strong> — unifies prior work, clarifies relationships between methods, or becomes a standard reference despite not optimizing benchmarks.</li>
+              <li><strong>Dataset-level impact</strong> — enables diffusion on a new modality, or makes a previously infeasible dataset tractable.</li>
+              <li><strong>Conceptual synthesis</strong> — unifies prior work, clarifies relationships between methods, or becomes a standard reference.</li>
             </ul>
           </div>
         </section>
@@ -232,14 +242,27 @@
           <h3>Canonical preprint exception</h3>
           <div class="policyCard">
             <p class="muted" style="margin-top:0;">
-              A paper may be included without peer-reviewed publication only if it is <strong>field-defining</strong>, has
-              <strong>clear downstream lineage</strong> in later peer-reviewed work, and has <strong>no peer-reviewed substitute</strong>.
+              A paper may be included without peer-reviewed publication only if it is <strong>field-defining</strong>,
+              has <strong>clear downstream lineage</strong> in later peer-reviewed work,
+              and has <strong>no peer-reviewed substitute</strong>.
               These entries are explicitly labeled as <strong>Canonical preprint</strong> and include an editorial note.
             </p>
             <p class="muted" style="margin-bottom:0;">
               The exception is <strong>rare by design</strong> — it does not apply to routine arXiv submissions, under-review work,
               or short-lived benchmark trends.
             </p>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>What Lighthouse is not</h3>
+          <div class="policyCard">
+            <ul class="muted">
+              <li>Not a leaderboard</li>
+              <li>Not an automatic crawler</li>
+              <li>Not a complete bibliography</li>
+              <li>Not a substitute for reading the papers</li>
+            </ul>
           </div>
         </section>
 
