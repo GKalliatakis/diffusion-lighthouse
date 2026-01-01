@@ -13,8 +13,8 @@ Diffusion Lighthouse website safely and correctly.
 
 | You change… | You must run… |
 |------------|---------------|
-| Paper metadata (titles, venues, relations, tags, notes) | `build_dataset.py` |
-| Citation counts | `update_citations.py` → `build_dataset.py` |
+| Paper metadata (titles, venues, relations, tags, notes) | `python scripts/build_dataset.py` |
+| Citation counts | `python scripts/update_citations.py` → `python scripts/build_dataset.py` |
 | UI / wording / behavior | edit files in `site/` only |
 | README framing | edit README only (no build needed) |
 
@@ -99,7 +99,7 @@ This is the most common cause of:
 Quick checks:
 
 ```bash
-ls site/public/data/papers.json
+ls -lh site/public/data/papers.json
 ```
 
 Paper count:
@@ -125,9 +125,11 @@ PY
 
 ### 5️⃣ View the site locally
 
+From the repo root:
+
 ```bash
 cd site
-python -m http.server
+python -m http.server 8000
 ```
 
 Open:
@@ -137,7 +139,7 @@ http://localhost:8000
 
 Hard refresh if needed:
 - macOS: `Cmd + Shift + R`
-- Linux / Windows: `Ctrl + Shift + R`
+- Windows/Linux: `Ctrl + Shift + R`
 
 ---
 
@@ -159,10 +161,15 @@ site/style.css
 
 ---
 
-### Quick sanity check
+### 7️⃣ Run doctor checks (recommended)
+
 ```bash
 python scripts/doctor.py
+```
 
+If the doctor fails, fix issues **in YAML** or the scripts — do **not** hand-edit `papers.json`.
+
+---
 
 ## 🧠 Mental model (important)
 
@@ -183,6 +190,7 @@ If something looks wrong on the site:
 - Expecting README edits to affect the website
 - Treating missing citations as errors
 - Editing `papers.json` directly (it is a build artifact)
+- Running the site from the wrong folder (serve from `site/`)
 
 ---
 
@@ -191,8 +199,8 @@ If something looks wrong on the site:
 Stop iterating if:
 - the site loads correctly
 - papers render and open
-- relations work
-- links resolve
+- relations work (incoming/outgoing shown in modal)
+- links resolve to canonical sources
 
 Citation completeness is **explicitly not a goal**.
 
@@ -206,8 +214,9 @@ Every update:
 1. Edit data/papers.yaml
 2. (Optional) python scripts/update_citations.py
 3. python scripts/build_dataset.py   ← required
-4. Refresh site
-5. Commit & push
+4. cd site && python -m http.server 8000
+5. Refresh site
+6. Commit & push
 ```
 
 ---
