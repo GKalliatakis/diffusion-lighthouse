@@ -41,6 +41,12 @@ If it’s not on the website, it’s not included.
 
 ---
 
+## 🔧 Maintenance
+
+For the exact, repeatable steps to update citations, rebuild `papers.json`, refresh the site, and troubleshoot common failures (Scholar blocks, stale build artifacts, README marker errors), see **[MAINTENANCE.md](MAINTENANCE.md)**.
+
+---
+
 ## 🗂️ Repository structure
 
 This repository powers the website. The README intentionally does **not** duplicate the paper list.
