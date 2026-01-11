@@ -187,8 +187,10 @@ const RELATION_HELP = {
   contrasts_with: "Takes a different or opposing approach.",
   precedes: "Earlier work that established foundations.",
   simplifies: "Reduces complexity while preserving capability.",
+  extends: "Adds scope or capability on top of this work.",
+  accelerates_sampling_of: "Introduces a faster sampling method for this model family.",
+  refines_training_of: "Improves training choices, objectives, or schedules.",
 };
-
 
 function humanizeRelationType(t) {
   const s = String(t || "").trim();
@@ -244,8 +246,12 @@ function renderRelationsList(items) {
   return items
     .map((it) => {
       const r = it?.relation || it; // supports {source, relation} for incoming
-      const typeTxt = humanizeRelationType(r?.type);
-      const typeHtml = typeTxt ? `<span class="relationType">${escapeHtml(typeTxt)}</span>` : "";
+      const typeKey = String(r?.type || "").trim();
+      const typeTxt = humanizeRelationType(typeKey);
+      const tip = RELATION_HELP[typeKey] || RELATION_HELP[typeKey.toLowerCase?.()] || "";
+      const typeHtml = typeTxt
+        ? `<span class="relationType"${tip ? ` title="${escapeHtml(tip)}"` : ""}>${escapeHtml(typeTxt)}</span>`
+        : "";
 
       const tid = resolveTargetId(r);
       const title = r?.target_title || resolvePaperTitle(tid) || "Related";
@@ -273,7 +279,31 @@ function renderRelationsList(items) {
 
 // Compute base prefix (e.g. "/diffusion-lighthouse") so routes work on GitHub Pages subpaths.
 const ROUTES = ["/about", "/editorial-policy"];
+
+function baseFromTag() {
+  const baseEl = document.querySelector("base[href]");
+  if (!baseEl) return null;
+
+  try {
+    const abs = new URL(baseEl.getAttribute("href"), window.location.href);
+    let p = abs.pathname || "/";
+    if (p.endsWith("/")) p = p.slice(0, -1);
+    return p === "/" ? "" : p;
+  } catch {
+    return null;
+  }
+}
+
+function isIndexVisible() {
+  const indexMain = $("indexMain");
+  return !!indexMain && indexMain.hidden === false;
+}
+
+
 function computeBasePrefix() {
+  const fromBase = baseFromTag();
+  if (fromBase != null) return fromBase;
+
   let p = window.location.pathname || "/";
   p = p.replace(/\/index\.html$/, "");
 
@@ -288,6 +318,7 @@ function computeBasePrefix() {
   if (p !== "/" && p.endsWith("/")) p = p.slice(0, -1);
   return p === "/" ? "" : p;
 }
+
 
 const BASE = computeBasePrefix();
 
@@ -552,14 +583,15 @@ function recomputeFilters() {
 
 function renderList() {
   const list = $("list");
-  const relPreview = renderRelationsPreview(p, 3);
   if (!list) return;
-
+  if (!isIndexVisible()) return;
   // Ensure explainer exists (index only)
   renderIndexIntroOnce();
 
   const html = state.filtered
     .map((p) => {
+      const relPreview = renderRelationsPreview(p, 3);
+
       const venueYear = [p.venue, p.year].filter(Boolean).join(" · ");
       const cites = getCitationsCount(p);
 
@@ -613,6 +645,7 @@ function renderList() {
             ${p.impact_type ? `<span class="chip">${escapeHtml(toTitleCase(p.impact_type))}</span>` : ""}
             ${(p.tags || []).slice(0, 6).map((t) => `<span class="chip">${escapeHtml(t)}</span>`).join("")}
           </div>
+
           ${relPreview ? `<div class="relationsPreview">${relPreview}</div>` : ""}
 
           <div class="cardActions">
@@ -628,21 +661,6 @@ function renderList() {
   list.innerHTML = html;
 }
 
-function humanizeRelationType(t) {
-  const map = {
-    builds_on: "builds on",
-    enables: "enables",
-    unifies: "unifies",
-    contrasts_with: "contrasts",
-    precedes: "precedes",
-    simplifies: "simplifies",
-    extends: "extends",
-    accelerates_sampling_of: "accelerates",
-    refines_training_of: "refines",
-  };
-  return map[String(t || "")] || String(t || "");
-}
-
 function renderRelationsPreview(p, limit = 3) {
   const rels = Array.isArray(p?.relations) ? p.relations : [];
   if (!rels.length) return "";
@@ -652,7 +670,7 @@ function renderRelationsPreview(p, limit = 3) {
 
   const html = shown
     .map((r) => {
-      const tid = r?.target_id || r?.paper_id || r?.id || r?.target || "";
+      const tid = resolveTargetId(r);
       const targetObj = tid ? state.byId.get(tid) : null;
       const label = r?.target_title || targetObj?.title || tid || "Related";
       const type = humanizeRelationType(r?.type);
@@ -667,7 +685,6 @@ function renderRelationsPreview(p, limit = 3) {
 
   return html + (more > 0 ? `<span class="smallMeta" style="margin-left:8px;">+${more}</span>` : "");
 }
-
 
 function renderChipRow(items, strong = false) {
   const arr = normalizeArray(items).filter(Boolean);
@@ -991,55 +1008,7 @@ function openPaperModal(paperId) {
 
   // ✅ Relations polish: outgoing + incoming, title resolution, tooltips on relation types
   if (paperRelations) {
-    // Define editorial meaning for relation types (tooltip)
-    const RELATION_HELP = {
-      builds_on: "Directly extends or refines ideas from this work.",
-      enables: "Makes later work feasible or practical.",
-      unifies: "Connects previously separate ideas into one framework.",
-      contrasts_with: "Takes a different or opposing approach.",
-      precedes: "Earlier work that established foundations.",
-      simplifies: "Reduces complexity while preserving capability.",
-      extends: "Adds scope or capability on top of this work.",
-      accelerates_sampling_of: "Introduces a faster sampling method for this model family.",
-      refines_training_of: "Improves training choices, objectives, or schedules.",
-    };
-
-    // Render a relations array into HTML (safe + clickable)
-    const renderRelationsList = (rels) => {
-      if (!Array.isArray(rels) || rels.length === 0) {
-        return `<span class="smallMeta">None listed.</span>`;
-      }
-
-      return rels
-        .map((r) => {
-          if (!r || typeof r !== "object") {
-            return `<div class="relationItem">${escapeHtml(String(r))}</div>`;
-          }
-
-          const typeKey = String(r.type || "");
-          const typeTip = RELATION_HELP[typeKey] || "";
-          const typeHtml = typeKey
-            ? `<span class="relationType" title="${escapeHtml(typeTip)}">${escapeHtml(typeKey)}</span>`
-            : "";
-
-          const targetId = r.target_id || r.paper_id || r.id || r.target || "";
-          const targetObj = targetId ? state.byId.get(targetId) : null;
-
-          // Prefer explicit title if provided; else resolve from id; else show id
-          const label = r.target_title || targetObj?.title || r.target || r.paper || r.id || "Related";
-
-          const linkHtml = targetId
-            ? `<a href="#" class="relationLink" data-open-paper="${escapeHtml(targetId)}">${escapeHtml(label)}</a>`
-            : `<span>${escapeHtml(label)}</span>`;
-
-          const noteHtml = r.note ? `<span class="smallMeta">${escapeHtml(String(r.note))}</span>` : "";
-
-          return `<div class="relationItem">${typeHtml}${linkHtml}${noteHtml}</div>`;
-        })
-        .join("");
-    };
-
-    const outgoing = Array.isArray(p.relations) ? p.relations : null;
+    const outgoing = Array.isArray(p.relations) ? p.relations : [];
     const incoming = state.incoming?.get(paperId) || [];
 
     const outgoingHtml = renderRelationsList(outgoing);
@@ -1064,7 +1033,6 @@ function openPaperModal(paperId) {
 
   setModalOpen(paperModal, true);
 }
-
 
 function closePaperModal() {
   state.activePaperId = null;
@@ -1113,7 +1081,9 @@ async function main() {
   bindPaperModal();
 
   // Route render (base-aware)
-  showPageFromLocation();
+  const forced = window.__DL_FORCE_ROUTE__;
+  if (forced) showPageByRoute(forced);
+  else showPageFromLocation();
 
   try {
     const { papers, citationsMeta } = await loadPapersJson();

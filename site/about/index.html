@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Diffusion Lighthouse</title>
+
+    <!-- IMPORTANT: single base, so assets resolve from /site/ when page is /site/about/ -->
+    <base href="../" />
+
+    <!-- Force route BEFORE app.js loads -->
+    <script>
+      window.__DL_FORCE_ROUTE__ = "about";
+    </script>
+
+    <link rel="stylesheet" href="style.css" />
+
+    <link rel="icon" type="image/png" sizes="32x32" href="public/assets/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="public/assets/brand/favicon-16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="public/assets/brand/apple-touch-icon.png" />
+    <meta name="theme-color" content="#0b0f14" />
+
+    <!-- Load app.js ONCE -->
+    <script src="app.js" defer></script>
+  </head>
+
+  <body>
+    <header class="container">
+      <div class="hero">
+        <div class="brand">
+          <div class="brandRow">
+            <img class="logo" src="public/assets/brand/logo.png" alt="Diffusion Lighthouse logo" />
+            <div>
+              <h1>Diffusion Lighthouse</h1>
+              <p>A curated, dataset-first map of diffusion research.</p>
+              <p class="muted" style="margin-top:6px;">Not a leaderboard. Not an archive.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="kpis">
+          <div class="kpi"><span id="total">0</span> papers</div>
+          <div class="kpi"><span id="count">0</span> results</div>
+        </div>
+      </div>
+
+      <!-- NAV -->
+      <nav class="subnav" aria-label="Primary">
+        <a href="/" data-nav="index" class="subnavLink" id="navIndex">Index</a>
+        <a href="/about" data-nav="about" class="subnavLink" id="navAbout">About</a>
+        <a href="/editorial-policy" data-nav="policy" class="subnavLink" id="navPolicy">Editorial Policy</a>
+      </nav>
+
+      <div class="controls" id="controls">
+        <input id="q" type="search" placeholder="Search title, authors, venue, tags..." autocomplete="off" />
+
+        <select id="impact">
+          <option value="">All impact types</option>
+        </select>
+
+        <select id="tag">
+          <option value="">All tags</option>
+        </select>
+
+        <select id="sort">
+          <option value="new">Sort: newest</option>
+          <option value="old">Sort: oldest</option>
+          <option value="title">Sort: title</option>
+          <option value="cites">Sort: citations</option>
+        </select>
+
+        <button id="clear" type="button">Clear</button>
+      </div>
+
+      <!-- JS will populate this from papers.json (citations_meta) -->
+      <div class="smallMeta" id="citeMeta" style="margin-top:6px;"></div>
+    </header>
+
+    <!-- INDEX -->
+    <main class="container" id="indexMain">
+      <div id="indexIntro"></div>
+      <div id="list" class="list"></div>
+    </main>
+
+    <!-- ABOUT PAGE -->
+    <main class="container" id="aboutMain" hidden>
+      <article class="policy">
+        <div class="policyTop">
+          <h2>How to read Diffusion Lighthouse</h2>
+          <p class="muted" style="margin-top:6px;">
+            A curated, dataset-first map of diffusion research. Not a leaderboard. Not an archive.
+          </p>
+
+          <p style="margin-top:12px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </div>
+
+        <section class="policyCard">
+          <p style="margin-top:0;">
+            <strong>Diffusion Lighthouse</strong> helps you navigate the diffusion literature by making
+            editorial judgment explicit.
+            It is not an exhaustive index and it does not rank papers by performance.
+            Instead, it surfaces work that shaped how diffusion models are conceptualized and used.
+          </p>
+          <p class="muted" style="margin-top:10px; margin-bottom:0;">
+            Benchmarks are context. Datasets define regimes. <strong>Ideas are the map.</strong>
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>What “dataset-first” means</h3>
+          <p class="muted">
+            Papers are interpreted relative to the data distributions they target
+            (images, text–image pairs, scale regimes, modalities),
+            not primarily by benchmark scores.
+          </p>
+          <p class="muted">
+            Dataset focus helps clarify where a method applies,
+            which claims are comparable,
+            and why certain ideas mattered at the time they were introduced.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>The inclusion bar</h3>
+          <p class="muted">
+            Most papers are excluded. Inclusion is editorial: a paper must be central to diffusion and deliver a lasting conceptual,
+            methodological, or dataset-level contribution.
+          </p>
+          <p class="muted" style="margin-top:10px;">
+            Read the full policy on <a href="/editorial-policy" data-nav="policy">Editorial Policy</a>.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>Publication labels</h3>
+          <div class="policyCard">
+            <ul class="muted" style="margin:0; padding-left:18px;">
+              <li style="margin:8px 0;">
+                <strong>Peer-reviewed</strong>: accepted at a major conference or journal; canonical proceedings/journal links are shown.
+              </li>
+              <li style="margin:8px 0;">
+                <strong>Canonical preprint</strong>: included only by exception when a technical report defined a direction before formal publication
+                and has clear downstream lineage. These entries are explicitly labeled and include an editorial note.
+              </li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="policySection">
+          <h3>Relations: why the map matters</h3>
+          <p class="muted">
+            Relations are editorial claims (e.g., “builds on”, “unifies”, “simplifies”).
+            They turn a list into a map: follow how ideas propagate from foundations → refinements → systems.
+          </p>
+        </section>
+
+        <section class="policySection">
+          <h3>Citations are context</h3>
+          <div class="policyCard">
+            <p class="muted" style="margin-top:0;">
+              “Cited by X” is a best-effort snapshot (and may come from different sources).
+              It is not real-time, and it is not a ranking signal.
+              Lighthouse uses citations only as historical context.
+            </p>
+            <p class="muted" style="margin-bottom:0;">
+              Tip: sort by citations for a rough “gravity well” view — then open papers to read the <em>why</em> and the <em>relations</em>.
+            </p>
+          </div>
+
+          <p style="margin-top:14px;">
+            <a class="linkBtn" href="/" data-nav="index">← Back to index</a>
+          </p>
+        </section>
+      </article>
+    </main>
+
+    <!-- EDITORIAL POLICY PAGE -->
+    <main class="container" id="policyMain" hidden>
+      <!-- (keep your existing policy content here) -->
+    </main>
+
+    <footer class="container muted footer">
+      <span>Powered by <code>data/papers.yaml</code> → <code>papers.json</code></span>
+      <span style="margin-left:10px;">·</span>
+      <a href="/about" data-nav="about">About</a>
+      <span style="margin-left:10px;">·</span>
+      <a href="/editorial-policy" data-nav="policy">Editorial Policy</a>
+    </footer>
+
+    <!-- Modals (keep your existing modal markup here exactly as in index.html) -->
+  </body>
+</html>
