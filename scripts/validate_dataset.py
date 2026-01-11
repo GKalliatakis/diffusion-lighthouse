@@ -8,6 +8,9 @@ from typing import Any, Dict, List, Set
 
 import yaml
 
+ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATA = ROOT / "data" / "papers.yaml"
+
 try:
     import jsonschema
 except ImportError:
@@ -68,7 +71,7 @@ def validate_arxiv_links(papers: List[Dict[str, Any]]) -> List[str]:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--data", default="../data/papers.yaml")
+    ap.add_argument("--data", default=str(DEFAULT_DATA))
     ap.add_argument("--schema", default="../data/schema.json")
     args = ap.parse_args()
 
