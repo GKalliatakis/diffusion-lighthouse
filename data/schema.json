@@ -119,12 +119,12 @@
           "minItems": 1,
           "items": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" }
         },
-
         "impact_type": {
           "type": "string",
           "enum": [
             "foundational",
             "enabling",
+            "methodological",
             "refinement",
             "survey",
             "application",
