@@ -1,0 +1,619 @@
+{
+  "papers": [
+    {
+      "id": "ddpm_2020",
+      "title": "Denoising Diffusion Probabilistic Models",
+      "year": 2020,
+      "authors": [
+        "Ho",
+        "Jain",
+        "Abbeel"
+      ],
+      "venue": "NeurIPS",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2006.11239",
+        "proceedings": "https://proceedings.neurips.cc/paper/2020/hash/4c5bcfec8584af0d967f1ab10179ca4b-Abstract.html",
+        "pdf": "https://proceedings.neurips.cc/paper_files/paper/2020/file/4c5bcfec8584af0d967f1ab10179ca4b-Paper.pdf"
+      },
+      "scholar": {
+        "scholar_query": "\"Denoising Diffusion Probabilistic Models\" Ho Jain Abbeel",
+        "scholar_url": "https://www.semanticscholar.org/paper/5c126ae3421f05768d8edd97ecd44b1364e2c99a"
+      },
+      "citations": {
+        "count": 25188,
+        "last_checked_utc": "2025-12-29T11:10:15Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "foundational",
+      "contribution_types": [
+        "theory",
+        "training",
+        "sampling"
+      ],
+      "dataset_focus": [
+        "CIFAR-10",
+        "ImageNet (64x64)"
+      ],
+      "concept_tags": [
+        "denoising diffusion",
+        "reverse diffusion process",
+        "variational bound",
+        "score matching connection",
+        "iterative generative modeling"
+      ],
+      "tags": [
+        "foundations",
+        "image"
+      ],
+      "why_it_matters": "Introduced diffusion probabilistic models as a practical framework for generative modeling, reframing generation as iterative denoising from Gaussian noise. The paper established the training objective and reverse diffusion sampling procedure that underpin most subsequent diffusion-based methods, making it the conceptual and methodological starting point for modern diffusion research.\n"
+    },
+    {
+      "id": "ddim_2020",
+      "title": "Denoising Diffusion Implicit Models",
+      "year": 2020,
+      "authors": [
+        "Song",
+        "Meng",
+        "Ermon"
+      ],
+      "venue": "ICLR",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2010.02502",
+        "proceedings": "https://openreview.net/forum?id=St1giarCHLP",
+        "pdf": "https://openreview.net/pdf?id=St1giarCHLP"
+      },
+      "scholar": {
+        "scholar_query": "\"Denoising Diffusion Implicit Models\" Song Ermon",
+        "scholar_url": "https://www.semanticscholar.org/paper/014576b866078524286802b1d0e18628520aa886"
+      },
+      "citations": {
+        "count": 10000,
+        "last_checked_utc": "2025-12-29T11:10:15Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "methodological",
+      "contribution_types": [
+        "sampling",
+        "theory"
+      ],
+      "dataset_focus": [
+        "CIFAR-10",
+        "ImageNet (64x64)"
+      ],
+      "concept_tags": [
+        "non-Markovian diffusion",
+        "deterministic sampling",
+        "implicit generative model",
+        "DDIM sampling trajectory",
+        "compute-quality tradeoff"
+      ],
+      "tags": [
+        "foundations",
+        "sampling"
+      ],
+      "relations": [
+        {
+          "type": "accelerates_sampling_of",
+          "target": "ddpm_2020"
+        }
+      ],
+      "why_it_matters": "Showed that DDPMs can be sampled using a non-Markovian reverse process that preserves the same training objective while enabling much faster generation. This introduced deterministic and controllable sampling trajectories (via a compute–quality tradeoff) and became a standard inference-time primitive used across diffusion systems to reduce sampling cost without retraining.\n"
+    },
+    {
+      "id": "score_sde_2021",
+      "title": "Score-Based Generative Modeling through Stochastic Differential Equations",
+      "year": 2021,
+      "authors": [
+        "Song",
+        "Sohl-Dickstein",
+        "Kingma",
+        "Kumar",
+        "Ermon",
+        "Poole"
+      ],
+      "venue": "ICLR",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2011.13456",
+        "proceedings": "https://openreview.net/forum?id=PxTIG12RRHS",
+        "pdf": "https://openreview.net/pdf?id=PxTIG12RRHS"
+      },
+      "scholar": {
+        "scholar_query": "\"Score-Based Generative Modeling through Stochastic Differential Equations\"",
+        "scholar_url": "https://www.semanticscholar.org/paper/633e2fbfc0b21e959a244100937c5853afca4853"
+      },
+      "citations": {
+        "count": 8662,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "foundational",
+      "contribution_types": [
+        "theory",
+        "sampling",
+        "unification"
+      ],
+      "dataset_focus": [
+        "CIFAR-10",
+        "ImageNet",
+        "continuous data distributions"
+      ],
+      "concept_tags": [
+        "score-based modeling",
+        "stochastic differential equations",
+        "probability flow ODE",
+        "continuous-time diffusion",
+        "reverse-time SDE"
+      ],
+      "tags": [
+        "foundations",
+        "theory"
+      ],
+      "relations": [
+        {
+          "type": "unifies",
+          "target": "score_matching_2019"
+        },
+        {
+          "type": "extends",
+          "target": "ddpm_2020"
+        }
+      ],
+      "why_it_matters": "Unified score-based generative models and discrete diffusion processes under a continuous-time stochastic differential equation framework. The paper provided theoretical clarity, introduced probability flow ODEs for deterministic sampling, and established the continuous-time view that underpins many modern diffusion samplers and theoretical analyses.\n"
+    },
+    {
+      "id": "score_matching_2019",
+      "title": "Generative Modeling by Estimating Gradients of the Data Distribution",
+      "year": 2019,
+      "authors": [
+        "Song",
+        "Ermon"
+      ],
+      "venue": "NeurIPS",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/1907.05600",
+        "proceedings": "https://proceedings.neurips.cc/paper/2019/hash/3001ef257407d5a371a96dcd947c7d93-Abstract.html",
+        "pdf": "https://proceedings.neurips.cc/paper/2019/file/3001ef257407d5a371a96dcd947c7d93-Paper.pdf"
+      },
+      "scholar": {
+        "scholar_query": "\"Generative Modeling by Estimating Gradients of the Data Distribution\" Song Ermon",
+        "scholar_url": "https://www.semanticscholar.org/paper/965359b3008ab50dd04e171551220ec0e7f83aba"
+      },
+      "citations": {
+        "count": 4781,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "foundational",
+      "contribution_types": [
+        "theory",
+        "score_matching"
+      ],
+      "dataset_focus": [
+        "CIFAR-10",
+        "MNIST"
+      ],
+      "concept_tags": [
+        "score matching",
+        "gradient estimation",
+        "energy-based modeling",
+        "Stein discrepancy",
+        "implicit generative modeling"
+      ],
+      "tags": [
+        "foundations",
+        "score"
+      ],
+      "relations": [
+        {
+          "type": "precedes",
+          "target": "ddpm_2020"
+        }
+      ],
+      "why_it_matters": "Introduced scalable score-based generative modeling by directly learning gradients of the data distribution, avoiding explicit density estimation. This paper provided the mathematical and conceptual foundation later unified with diffusion processes, enabling the development of modern score-based and diffusion generative models.\n"
+    },
+    {
+      "id": "improved_ddpm_2021",
+      "title": "Improved Denoising Diffusion Probabilistic Models",
+      "year": 2021,
+      "authors": [
+        "Nichol",
+        "Dhariwal"
+      ],
+      "venue": "ICML",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2102.09672",
+        "proceedings": "https://proceedings.mlr.press/v139/nichol21a.html",
+        "pdf": "https://proceedings.mlr.press/v139/nichol21a/nichol21a.pdf"
+      },
+      "scholar": {
+        "scholar_query": "\"Improved Denoising Diffusion Probabilistic Models\" Nichol Dhariwal",
+        "scholar_url": "https://www.semanticscholar.org/paper/de18baa4964804cf471d85a5a090498242d2e79f"
+      },
+      "citations": {
+        "count": 4638,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "refinement",
+      "contribution_types": [
+        "training",
+        "sampling",
+        "optimization"
+      ],
+      "dataset_focus": [
+        "CIFAR-10",
+        "ImageNet (64x64)"
+      ],
+      "concept_tags": [
+        "noise schedule design",
+        "cosine variance schedule",
+        "parameterization choices",
+        "loss reweighting",
+        "likelihood improvement"
+      ],
+      "tags": [
+        "training",
+        "image"
+      ],
+      "relations": [
+        {
+          "type": "refines_training_of",
+          "target": "ddpm_2020"
+        }
+      ],
+      "why_it_matters": "Systematically analyzed and improved multiple design choices in DDPM training and sampling, including noise schedules, parameterization, and loss weighting. These refinements significantly improved sample quality and stability and established practices that became standard in later diffusion models.\n"
+    },
+    {
+      "id": "classifier_guidance_2021",
+      "title": "Diffusion Models Beat GANs on Image Synthesis",
+      "year": 2021,
+      "authors": [
+        "Dhariwal",
+        "Nichol"
+      ],
+      "venue": "NeurIPS",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2105.05233",
+        "proceedings": "https://proceedings.neurips.cc/paper/2021/hash/49ad23d1ec9fa4bd8d77d02681df5cfa-Abstract.html",
+        "pdf": "https://proceedings.neurips.cc/paper/2021/file/49ad23d1ec9fa4bd8d77d02681df5cfa-Paper.pdf"
+      },
+      "scholar": {
+        "scholar_query": "\"Diffusion Models Beat GANs on Image Synthesis\" Dhariwal Nichol",
+        "scholar_url": "https://www.semanticscholar.org/paper/64ea8f180d0682e6c18d1eb688afdb2027c02794"
+      },
+      "citations": {
+        "count": 10136,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "conditioning",
+        "guidance",
+        "scaling"
+      ],
+      "dataset_focus": [
+        "ImageNet (class-conditional)",
+        "CIFAR-10"
+      ],
+      "concept_tags": [
+        "classifier guidance",
+        "conditional diffusion",
+        "fidelity-diversity tradeoff",
+        "guided sampling",
+        "diffusion vs GANs"
+      ],
+      "tags": [
+        "guidance",
+        "image"
+      ],
+      "relations": [
+        {
+          "type": "builds_on",
+          "target": "improved_ddpm_2021"
+        },
+        {
+          "type": "enables",
+          "target": "classifier_free_guidance_2022"
+        }
+      ],
+      "why_it_matters": "Demonstrated that diffusion models can surpass GANs in high-fidelity image synthesis and introduced classifier guidance as a practical mechanism for conditional generation. By explicitly controlling the tradeoff between sample fidelity and diversity at inference time, the paper established guidance as a central concept in diffusion-based generative modeling and set the stage for later classifier-free approaches.\n"
+    },
+    {
+      "id": "classifier_free_guidance_2022",
+      "title": "Classifier-Free Diffusion Guidance",
+      "year": 2022,
+      "authors": [
+        "Ho",
+        "Salimans"
+      ],
+      "venue": "NeurIPS",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2207.12598",
+        "proceedings": "https://openreview.net/forum?id=qw8AKxfYbI",
+        "pdf": "https://openreview.net/pdf?id=qw8AKxfYbI"
+      },
+      "scholar": {
+        "scholar_query": "\"Classifier-Free Diffusion Guidance\" Ho Salimans",
+        "scholar_url": "https://www.semanticscholar.org/paper/af9f365ed86614c800f082bd8eb14be76072ad16"
+      },
+      "citations": {
+        "count": 5197,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "guidance",
+        "conditioning",
+        "sampling"
+      ],
+      "dataset_focus": [
+        "ImageNet (class-conditional)",
+        "text-conditional image generation"
+      ],
+      "concept_tags": [
+        "classifier-free guidance",
+        "unconditional-conditional mixing",
+        "guidance scaling",
+        "conditional diffusion",
+        "prompt adherence"
+      ],
+      "tags": [
+        "guidance",
+        "conditioning"
+      ],
+      "relations": [
+        {
+          "type": "simplifies",
+          "target": "classifier_guidance_2021"
+        }
+      ],
+      "why_it_matters": "Eliminated the need for a separate classifier by introducing classifier-free guidance, which mixes conditional and unconditional predictions during sampling. This significantly simplified guided diffusion while retaining strong control over conditional generation, and became the default guidance mechanism in modern text-to-image and multimodal diffusion systems.\n"
+    },
+    {
+      "id": "latent_diffusion_2022",
+      "title": "High-Resolution Image Synthesis with Latent Diffusion Models",
+      "year": 2022,
+      "authors": [
+        "Rombach",
+        "Blattmann",
+        "Lorenz",
+        "Esser",
+        "Ommer"
+      ],
+      "venue": "CVPR",
+      "publication_status": "accepted",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2112.10752",
+        "proceedings": "https://openaccess.thecvf.com/content/CVPR2022/html/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.html",
+        "pdf": "https://openaccess.thecvf.com/content/CVPR2022/papers/Rombach_High-Resolution_Image_Synthesis_With_Latent_Diffusion_Models_CVPR_2022_paper.pdf"
+      },
+      "scholar": {
+        "scholar_query": "\"High-Resolution Image Synthesis with Latent Diffusion Models\" Rombach Ommer",
+        "scholar_url": "https://www.semanticscholar.org/paper/c10075b3746a9f3dd5811970e93c8ca3ad39b39d"
+      },
+      "citations": {
+        "count": 20628,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "systems",
+        "architecture",
+        "efficiency"
+      ],
+      "dataset_focus": [
+        "ImageNet",
+        "high-resolution natural images"
+      ],
+      "concept_tags": [
+        "latent diffusion",
+        "autoencoder-based compression",
+        "perceptual image space",
+        "compute-efficient diffusion",
+        "high-resolution synthesis"
+      ],
+      "tags": [
+        "latent",
+        "image",
+        "systems"
+      ],
+      "relations": [
+        {
+          "type": "builds_on",
+          "target": "ddpm_2020"
+        },
+        {
+          "type": "enables",
+          "target": "text_to_image_diffusion_2022"
+        }
+      ],
+      "why_it_matters": "Introduced latent diffusion models, moving the diffusion process from pixel space to a learned latent representation in order to drastically reduce computational and memory costs. This made high-resolution diffusion practical on commodity hardware and established the architectural foundation for widely deployed text-to-image systems such as Stable Diffusion.\n"
+    },
+    {
+      "id": "glide_2021",
+      "title": "GLIDE: Towards Photorealistic Image Generation and Editing with Text-Guided Diffusion Models",
+      "year": 2021,
+      "authors": [
+        "Nichol",
+        "Dhariwal",
+        "Ramesh",
+        "et al."
+      ],
+      "venue": "arXiv",
+      "publication_status": "canonical_preprint",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2112.10741",
+        "pdf": "https://arxiv.org/pdf/2112.10741.pdf"
+      },
+      "scholar": {
+        "scholar_url": "https://scholar.google.com/scholar?cluster=15472303808406531445&hl=en&as_sdt=2005&sciodt=0,5"
+      },
+      "citations": {
+        "count": 4320,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "conditioning",
+        "multimodal_generation",
+        "image_editing"
+      ],
+      "dataset_focus": [
+        "text–image pairs",
+        "web-scale image–text data"
+      ],
+      "concept_tags": [
+        "text-guided diffusion",
+        "classifier-free guidance (early usage)",
+        "multimodal conditioning",
+        "diffusion-based image editing",
+        "prompt-based generation"
+      ],
+      "tags": [
+        "text-to-image",
+        "editing"
+      ],
+      "relations": [
+        {
+          "type": "precedes",
+          "target": "latent_diffusion_2022"
+        },
+        {
+          "type": "enables",
+          "target": "text_to_image_diffusion_2022"
+        }
+      ],
+      "editorial_note": "Included as a canonical technical report despite lacking peer-reviewed publication. GLIDE established core design patterns for text-guided diffusion that directly influenced later peer-reviewed and production text-to-image systems.\n",
+      "why_it_matters": "Demonstrated that diffusion models can be effectively conditioned on text for both image generation and editing, establishing practical recipes for prompt-based control. GLIDE crystallized text-guided diffusion as a general-purpose multimodal generation paradigm and directly influenced subsequent large-scale text-to-image systems.\n"
+    },
+    {
+      "id": "imagen_2022",
+      "title": "Photorealistic Text-to-Image Diffusion Models with Deep Language Understanding",
+      "year": 2022,
+      "authors": [
+        "Saharia",
+        "Chan",
+        "Saxena",
+        "et al."
+      ],
+      "venue": "arXiv",
+      "publication_status": "canonical_preprint",
+      "links": {
+        "arxiv": "https://arxiv.org/abs/2205.11487",
+        "pdf": "https://arxiv.org/pdf/2205.11487.pdf"
+      },
+      "scholar": {
+        "scholar_url": "https://scholar.google.com/scholar?cluster=2130901831690841916&hl=en&as_sdt=2005&sciodt=0,5"
+      },
+      "citations": {
+        "count": 7380,
+        "last_checked_utc": "2025-12-29T10:52:07Z",
+        "source": "semantic_scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "multimodal_generation",
+        "scaling",
+        "cascaded_diffusion"
+      ],
+      "dataset_focus": [
+        "large-scale web text–image pairs",
+        "multi-resolution image cascades"
+      ],
+      "concept_tags": [
+        "cascaded diffusion",
+        "language-first conditioning",
+        "text–image alignment",
+        "large text encoders",
+        "photorealistic synthesis"
+      ],
+      "tags": [
+        "text-to-image",
+        "scaling"
+      ],
+      "relations": [
+        {
+          "type": "builds_on",
+          "target": "glide_2021"
+        },
+        {
+          "type": "contrasts_with",
+          "target": "latent_diffusion_2022"
+        }
+      ],
+      "editorial_note": "Included as a canonical technical report despite lacking peer-reviewed publication. Imagen demonstrated that scaling language understanding and cascading diffusion models yields dramatic gains in photorealism and text alignment, shaping subsequent text-to-image systems.\n",
+      "why_it_matters": "Demonstrated that strong text encoders and large-scale training are central to high-quality text-to-image diffusion. By combining language-first conditioning with cascaded diffusion models, Imagen established a new performance ceiling and influenced the design of later large-scale text-to-image systems.\n"
+    },
+    {
+      "id": "progressive_distillation_2022",
+      "title": "Progressive Distillation for Fast Sampling of Diffusion Models",
+      "year": 2022,
+      "authors": [
+        "Salimans",
+        "Ho"
+      ],
+      "venue": "ICLR",
+      "publication_status": "accepted",
+      "links": {
+        "doi": "https://doi.org/10.48550/arXiv.2202.00512",
+        "proceedings": "https://openreview.net/forum?id=TIdIXlH7C8",
+        "pdf": "https://openreview.net/pdf?id=TIdIXlH7C8",
+        "arxiv": "https://arxiv.org/abs/2202.00512"
+      },
+      "scholar": {
+        "scholar_query": "\"Progressive Distillation for Fast Sampling of Diffusion Models\" Salimans Ho"
+      },
+      "citations": {
+        "source": "Google Scholar"
+      },
+      "impact_type": "enabling",
+      "contribution_types": [
+        "distillation",
+        "sampling",
+        "acceleration"
+      ],
+      "dataset_focus": [
+        "ImageNet",
+        "CIFAR-10"
+      ],
+      "concept_tags": [
+        "progressive distillation",
+        "few-step diffusion",
+        "teacher–student diffusion",
+        "sampling acceleration",
+        "quality–compute tradeoff"
+      ],
+      "tags": [
+        "acceleration",
+        "distillation"
+      ],
+      "relations": [
+        {
+          "type": "builds_on",
+          "target": "ddim_2020"
+        },
+        {
+          "type": "builds_on",
+          "target": "score_sde_2021"
+        }
+      ],
+      "why_it_matters": "Introduced progressive distillation as a practical method for reducing diffusion sampling steps while preserving sample quality. By repeatedly distilling a multi-step diffusion process into progressively shorter ones, this work made fast inference feasible and laid the groundwork for later few-step and production-oriented diffusion acceleration techniques.\n"
+    }
+  ],
+  "citations_meta": {
+    "last_updated_utc": "2025-12-29T11:10:15Z",
+    "notes": "Citations are best-effort snapshots. Scholar may block; Semantic Scholar may differ due to indexing.",
+    "source": "google_scholar + semantic_scholar_fallback"
+  }
+}
