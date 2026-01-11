@@ -1,13 +1,9 @@
-name: Deploy site to GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:
   push:
     branches: ["main"]
-    paths:
-      - "site/**"
-      - "data/papers.yaml"
-      - "data/citations.json"
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -22,21 +18,18 @@ jobs:
   deploy:
     environment:
       name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - name: Prepare site artifact
-        run: |
-          mkdir -p _site/data
-          cp -r site/* _site/
-          cp data/citations.json _site/data/citations.json
-          cp data/papers.yaml _site/data/papers.yaml
-
+      # If your site is already built and committed in /site, upload it directly:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "_site"
+          path: site
 
       - name: Deploy to GitHub Pages
+        id: deployment
         uses: actions/deploy-pages@v4
