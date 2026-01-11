@@ -10,6 +10,7 @@ import yaml
 
 ROOT = Path(__file__).resolve().parent.parent
 DEFAULT_DATA = ROOT / "data" / "papers.yaml"
+DEFAULT_SCHEMA = ROOT / "data" / "schema.json"
 
 try:
     import jsonschema
@@ -72,7 +73,7 @@ def validate_arxiv_links(papers: List[Dict[str, Any]]) -> List[str]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--data", default=str(DEFAULT_DATA))
-    ap.add_argument("--schema", default="../data/schema.json")
+    ap.add_argument("--schema", default=str(DEFAULT_SCHEMA))
     args = ap.parse_args()
 
     data_path = Path(args.data)
